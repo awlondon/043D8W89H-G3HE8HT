@@ -1,0 +1,12 @@
+{
+  "name": "voice-sales-agent-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "nest start",
+    "dev": "nest start --watch",
+    "lint": "eslint src --ext .ts",
+    "test": "jest"
+  }
+}

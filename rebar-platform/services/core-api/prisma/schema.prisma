@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    String @id @default(cuid())
+  email String @unique
+  role  String
+}
+
+model Shop {
+  id   String @id @default(cuid())
+  name String
+  users User[]
+}
+
+model Project {
+  id      String @id @default(cuid())
+  name    String
+  shop    Shop   @relation(fields: [shopId], references: [id])
+  shopId  String
+  jobsheets JobSheet[]
+}
+
+model JobSheet {
+  id              String   @id @default(cuid())
+  shopId          String
+  projectId       String
+  sourcePhotoPath String
+  parsedAt        DateTime?
+  status          String
+  project         Project @relation(fields: [projectId], references: [id])
+  shapes          Shape[]
+}
+
+model Shape {
+  id                String   @id @default(cuid())
+  jobSheetId        String
+  barSize           String
+  targetDimensions  String
+  bendAngles        String
+  quantity          Int
+  normalizedUnits   String
+  jobSheet          JobSheet @relation(fields: [jobSheetId], references: [id])
+}
+
+model BendRule {
+  id               String   @id @default(cuid())
+  barSize          String
+  angle            Float
+  stretchAllowance Float
+  effectiveFrom    DateTime
+  effectiveTo      DateTime?
+}
+
+model CutPlan {
+  id           String   @id @default(cuid())
+  jobSheetId   String
+  shapeId      String
+  stockLength  Float
+  cutLengths   String
+  scrapPieces  String
+  generatedBy  String
+  jobSheet     JobSheet @relation(fields: [jobSheetId], references: [id])
+}
+
+model BendPlan {
+  id            String   @id @default(cuid())
+  shapeId       String
+  bendMarks     String
+  feedLengths   String
+  angleSequence String
+  shape         Shape @relation(fields: [shapeId], references: [id])
+}
+
+model CutRun {
+  id            String   @id @default(cuid())
+  operatorId    String
+  deviceId      String
+  shapeId       String
+  completedCount Int
+  timestamp     DateTime @default(now())
+  shape         Shape @relation(fields: [shapeId], references: [id])
+}
+
+model BendRun {
+  id            String   @id @default(cuid())
+  operatorId    String
+  shapeId       String
+  completedCount Int
+  timestamp     DateTime @default(now())
+  shape         Shape @relation(fields: [shapeId], references: [id])
+}
+
+model ScrapRecord {
+  id             String   @id @default(cuid())
+  length         Float
+  barSize        String
+  stockRemaining Float
+  reason         String
+}
+
+model FutureStockPiece {
+  id                  String   @id @default(cuid())
+  barSize             String
+  length              Float
+  location            String
+  reservedForProjectId String?
+}
+
+model CallLog {
+  id             String   @id @default(cuid())
+  timestamp      DateTime @default(now())
+  duration       Int
+  outcome        String
+  transcriptPath String?
+  summary        String?
+  disposition    String?
+}
+
+model Lead {
+  id             String   @id @default(cuid())
+  source         String
+  shopName       String
+  contactName    String
+  contactRole    String
+  contactEmail   String?
+  contactPhone   String?
+  region         String?
+  workflowType   String?
+  scrapPainLevel String?
+  leadScore      Int?
+  deals          Deal[]
+}
+
+model Deal {
+  id                         String   @id @default(cuid())
+  leadId                     String
+  shopId                     String?
+  status                     String
+  expectedMonthlySeatCount   Int?
+  expectedSeatPrice          Float?
+  expectedNetRevenueAnnual   Float?
+  commissionRateRep          Float?
+  commissionRateMarketingFund Float?
+  closedAt                   DateTime?
+  lead                       Lead @relation(fields: [leadId], references: [id])
+  commissionRecords          CommissionRecord[]
+}
+
+model CommissionRecord {
+  id          String   @id @default(cuid())
+  dealId      String
+  salesContributorId String
+  period      String
+  netRevenue  Float
+  rate        Float
+  amount      Float
+  type        String
+  deal        Deal @relation(fields: [dealId], references: [id])
+}
+
+model MarketingFundLedger {
+  id          String   @id @default(cuid())
+  entryId     String
+  type        String
+  amount      Float
+  description String
+  timestamp   DateTime @default(now())
+}
