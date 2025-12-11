@@ -1,0 +1,10 @@
+{
+  "name": "field-tablet-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "lint": "eslint src --ext .ts,.tsx",
+    "test": "jest"
+  }
+}

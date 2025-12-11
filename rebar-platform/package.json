@@ -1,0 +1,20 @@
+{
+  "name": "rebar-platform",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@8.15.8",
+  "scripts": {
+    "dev:api": "pnpm --filter services/core-api dev",
+    "dev:web": "pnpm --filter apps/web-dashboard dev",
+    "dev:tablet": "pnpm --filter apps/field-tablet-app start",
+    "dev:voice-agent": "pnpm --filter apps/voice-sales-agent-api start",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*",
+    "ai/*"
+  ]
+}
