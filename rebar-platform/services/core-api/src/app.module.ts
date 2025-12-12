@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
+import { PalletsModule } from './pallets/pallets.module';
 
 @Module({
-  imports: [],
+  imports: [PalletsModule],
 })
 export class AppModule {}
