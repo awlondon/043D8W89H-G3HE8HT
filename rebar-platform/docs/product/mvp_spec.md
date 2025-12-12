@@ -12,3 +12,9 @@
 - Bending rule calibration per bar size.
 - Cutter and bender workflows with counters and completion logging.
 - Scrap capture and future stock ledger entries.
+
+### Pallet Planning (v1.2+)
+
+The platform will include a pallet stacking optimizer that uses piece size, weight, and quantity to suggest pallet groupings
+and layer order that stay within forklift limits and reduce restacking. See [Pallet Planning Spec](./pallet_planning.md) for
+details.

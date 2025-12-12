@@ -13,6 +13,10 @@ This monorepo hosts applications and services for the rebar fabrication platform
 - **docs/**: Product specs, engineering guides, sales collateral, and legal templates.
 - **scripts/**: Developer helpers and data generation tools.
 
+## Features
+
+- Pallet planning: layer-by-layer stacking plans that keep pallets within forklift weight limits and reduce restacking.
+
 ## Getting Started
 
 Install dependencies with pnpm (recommended) to take advantage of the workspace setup:
@@ -28,5 +32,10 @@ pnpm dev:api      # Start the core API (NestJS)
 pnpm dev:web      # Start the web dashboard (Next.js)
 pnpm dev:tablet   # Start the React Native field tablet app
 ```
+
+## Documentation
+
+- [MVP Workflow Spec](docs/product/mvp_spec.md)
+- [Pallet Planning Spec](docs/product/pallet_planning.md)
 
 Refer to `docs/engineering/dev_guide.md` for local environment setup, data seeding, and service orchestration.
