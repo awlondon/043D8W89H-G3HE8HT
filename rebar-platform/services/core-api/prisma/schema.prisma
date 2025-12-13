@@ -17,6 +17,8 @@ model Shop {
   id   String @id @default(cuid())
   name String
   users User[]
+  scrapFreeThresholdPercent Float @default(2.0)
+  productionRuns ProductionRun[]
 }
 
 model Project {
@@ -24,6 +26,7 @@ model Project {
   name    String
   shop    Shop   @relation(fields: [shopId], references: [id])
   shopId  String
+  productionRuns ProductionRun[]
   jobsheets JobSheet[]
 }
 
@@ -95,6 +98,21 @@ model BendRun {
   completedCount Int
   timestamp     DateTime @default(now())
   shape         Shape @relation(fields: [shapeId], references: [id])
+}
+
+model ProductionRun {
+  id           String   @id @default(cuid())
+  projectId    String
+  shopId       String
+  operatorId   String
+  stockUsedIn  Float
+  scrapLengthIn Float
+  scrapPercent  Float?
+  isScrapFree   Boolean @default(false)
+  scrapFreeThresholdPercent Float?
+  closedAt     DateTime @default(now())
+  project      Project @relation(fields: [projectId], references: [id])
+  shop         Shop    @relation(fields: [shopId], references: [id])
 }
 
 model ScrapRecord {

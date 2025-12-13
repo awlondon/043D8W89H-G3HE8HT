@@ -1,5 +1,17 @@
 import { randomUUID } from 'crypto';
-import { Pallet, PalletLayer, PalletPiece, PalletStatus, PlannedPalletDto, Project, Shape, ShopPalletConfig } from './models';
+import {
+  Pallet,
+  PalletLayer,
+  PalletPiece,
+  PalletStatus,
+  PlannedPalletDto,
+  ProductionRun,
+  Project,
+  ScrapFreeStats,
+  Shape,
+  ShopPalletConfig,
+  ShopSettings,
+} from './models';
 
 const projects: Project[] = [
   { id: 'project-1', name: 'Highway Overpass Retrofit', shopId: 'shop-1' },
@@ -48,9 +60,42 @@ const shopConfigs: ShopPalletConfig[] = [
   },
 ];
 
+const shopSettings: ShopSettings[] = [
+  {
+    shopId: 'shop-1',
+    scrapFreeThresholdPercent: 2.0,
+  },
+];
+
 let pallets: Pallet[] = [];
 let palletLayers: PalletLayer[] = [];
 let palletPieces: PalletPiece[] = [];
+let productionRuns: ProductionRun[] = [
+  {
+    id: 'run-1',
+    projectId: 'project-1',
+    shopId: 'shop-1',
+    operatorId: 'op-1',
+    stockUsedIn: 1200,
+    scrapLengthIn: 18,
+    scrapPercent: 1.5,
+    isScrapFree: true,
+    scrapFreeThresholdPercent: 2,
+    closedAt: new Date(),
+  },
+  {
+    id: 'run-2',
+    projectId: 'project-1',
+    shopId: 'shop-1',
+    operatorId: 'op-2',
+    stockUsedIn: 800,
+    scrapLengthIn: 24,
+    scrapPercent: 3,
+    isScrapFree: false,
+    scrapFreeThresholdPercent: 2,
+    closedAt: new Date(),
+  },
+];
 
 export function getProject(projectId: string): Project | undefined {
   return projects.find((project) => project.id === projectId);
@@ -60,6 +105,10 @@ export function getShopConfigForProject(projectId: string): ShopPalletConfig | u
   const project = getProject(projectId);
   if (!project) return undefined;
   return shopConfigs.find((config) => config.shopId === project.shopId);
+}
+
+export function getShopSettings(shopId: string): ShopSettings | undefined {
+  return shopSettings.find((settings) => settings.shopId === shopId);
 }
 
 export function getShapesForProject(projectId: string, shapeIds?: string[]): Shape[] {
@@ -138,5 +187,51 @@ export function resetAllPallets() {
 }
 
 export function getInventorySnapshot() {
-  return { projects, shapes, pallets, palletLayers, palletPieces, shopConfigs };
+  return { projects, shapes, pallets, palletLayers, palletPieces, shopConfigs, shopSettings, productionRuns };
+}
+
+export function upsertProductionRun(run: ProductionRun): ProductionRun {
+  const existingIndex = productionRuns.findIndex((candidate) => candidate.id === run.id);
+  if (existingIndex >= 0) {
+    productionRuns[existingIndex] = run;
+    return productionRuns[existingIndex];
+  }
+  productionRuns.push(run);
+  return run;
+}
+
+export function getProductionRun(runId: string): ProductionRun | undefined {
+  return productionRuns.find((run) => run.id === runId);
+}
+
+export function listRunsForProject(projectId: string): ProductionRun[] {
+  return productionRuns.filter((run) => run.projectId === projectId);
+}
+
+export function listRunsForOperator(operatorId: string): ProductionRun[] {
+  return productionRuns.filter((run) => run.operatorId === operatorId);
+}
+
+export function listRunsForShop(shopId: string): ProductionRun[] {
+  return productionRuns.filter((run) => run.shopId === shopId);
+}
+
+export function computeScrapFreeStats(filter: { operatorId?: string; shopId?: string }): ScrapFreeStats {
+  const scopedRuns = productionRuns.filter((run) => {
+    if (filter.operatorId && run.operatorId !== filter.operatorId) return false;
+    if (filter.shopId && run.shopId !== filter.shopId) return false;
+    return true;
+  });
+
+  const totalRuns = scopedRuns.length;
+  const scrapFreeRuns = scopedRuns.filter((run) => run.isScrapFree).length;
+  const scrapFreeRatePercent = totalRuns === 0 ? 0 : (scrapFreeRuns / totalRuns) * 100;
+
+  return {
+    operatorId: filter.operatorId,
+    shopId: filter.shopId,
+    totalRuns,
+    scrapFreeRuns,
+    scrapFreeRatePercent,
+  };
 }

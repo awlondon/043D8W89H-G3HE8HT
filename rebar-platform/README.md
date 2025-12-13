@@ -15,6 +15,7 @@ This monorepo hosts applications and services for the rebar fabrication platform
 
 ## Features
 
+- Scrap-free results (in practice): track scrap-free runs with configurable thresholds and operator/shop-level metrics.
 - Pallet planning: layer-by-layer stacking plans that keep pallets within forklift weight limits and reduce restacking.
 
 ## Getting Started
@@ -35,6 +36,7 @@ pnpm dev:tablet   # Start the React Native field tablet app
 
 ## Documentation
 
+- [Cutter App Spec](docs/product/cutter_app_spec.md)
 - [MVP Workflow Spec](docs/product/mvp_spec.md)
 - [Pallet Planning Spec](docs/product/pallet_planning.md)
 
