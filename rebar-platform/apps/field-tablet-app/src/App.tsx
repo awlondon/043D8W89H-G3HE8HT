@@ -42,6 +42,40 @@ const sampleProject: Project = {
   name: 'Highway Overpass Retrofit',
 };
 
+type ProductionRunSummary = {
+  id: string;
+  name: string;
+  operatorLabel: string;
+  scrapLengthIn: number;
+  stockUsedIn: number;
+  scrapPercent: number;
+  scrapFreeThresholdPercent: number;
+  isScrapFree: boolean;
+};
+
+const mockRuns: ProductionRunSummary[] = [
+  {
+    id: 'run-1',
+    name: 'Cutter Run 1',
+    operatorLabel: 'Alex (Operator A)',
+    scrapLengthIn: 18,
+    stockUsedIn: 1200,
+    scrapPercent: 1.5,
+    scrapFreeThresholdPercent: 2,
+    isScrapFree: true,
+  },
+  {
+    id: 'run-2',
+    name: 'Cutter Run 2',
+    operatorLabel: 'Blake (Operator B)',
+    scrapLengthIn: 24,
+    stockUsedIn: 800,
+    scrapPercent: 3,
+    scrapFreeThresholdPercent: 2,
+    isScrapFree: false,
+  },
+];
+
 const mockedPallets: PalletPlan[] = [
   {
     id: 'pallet-1',
@@ -117,6 +151,7 @@ type ScreenState =
 export default function App() {
   const [pallets, setPallets] = useState<PalletPlan[]>([]);
   const [screen, setScreen] = useState<ScreenState>({ screen: 'projectList' });
+  const [runs] = useState<ProductionRunSummary[]>(mockRuns);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
   const [queuedStatuses, setQueuedStatuses] = useState<string[]>([]);
 
@@ -160,6 +195,37 @@ export default function App() {
       <Button title="View cutter plan" onPress={() => {}} />
       <Button title="View bender plan" onPress={() => {}} />
       <Button title="Pallet plans" onPress={() => setScreen({ screen: 'palletList', project })} />
+
+      <Text style={styles.heading}>Recent cutter runs</Text>
+      <Text style={styles.copy}>Scrap-free is read-only from shop settings; operators see status only.</Text>
+      {runs.map((run) => renderRunCard(run))}
+    </View>
+  );
+
+  const renderScrapBadge = (run: ProductionRunSummary) => (
+    <Text style={[styles.tag, run.isScrapFree ? styles.tagSuccess : styles.tagMuted]}>
+      {run.isScrapFree ? 'SCRAP-FREE' : 'SCRAP TRACKED'}
+    </Text>
+  );
+
+  const renderRunCard = (run: ProductionRunSummary) => (
+    <View key={run.id} style={styles.card}>
+      <View style={styles.tagRow}>
+        <Text style={styles.cardTitle}>{run.name}</Text>
+        {renderScrapBadge(run)}
+      </View>
+      <Text style={styles.copy}>Operator: {run.operatorLabel}</Text>
+      {run.isScrapFree ? (
+        <Text style={styles.positive}>
+          Scrap-free target hit (scrap ≤ {run.scrapFreeThresholdPercent.toFixed(1)}%).
+        </Text>
+      ) : (
+        <Text style={styles.warning}>Scrap-free target missed (scrap = {run.scrapPercent.toFixed(1)}%).</Text>
+      )}
+      <Text style={styles.copy}>
+        Scrap captured: {run.scrapLengthIn.toFixed(1)} in from {run.stockUsedIn.toFixed(0)} in stock used.
+      </Text>
+      <Text style={styles.copy}>Threshold set by shop settings; adjust in admin tools only.</Text>
     </View>
   );
 
@@ -306,6 +372,10 @@ const styles = StyleSheet.create({
     color: '#b45309',
     fontWeight: '700',
   },
+  positive: {
+    color: '#047857',
+    fontWeight: '700',
+  },
   diagramLayer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -324,5 +394,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginVertical: 8,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  tag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+    overflow: 'hidden',
+  },
+  tagSuccess: {
+    backgroundColor: '#d1fae5',
+    color: '#065f46',
+    fontWeight: '700',
+  },
+  tagMuted: {
+    backgroundColor: '#e5e7eb',
+    color: '#374151',
+    fontWeight: '700',
   },
 });

@@ -25,6 +25,11 @@ export interface ShopPalletConfig {
   allowOverhangIn: number;
 }
 
+export interface ShopSettings {
+  shopId: string;
+  scrapFreeThresholdPercent: number;
+}
+
 export interface Pallet {
   id: string;
   projectId: string;
@@ -73,4 +78,25 @@ export interface PalletPlanningInput {
   projectId: string;
   shapeIds?: string[];
   maxPalletWeightLbs?: number;
+}
+
+export interface ProductionRun {
+  id: string;
+  projectId: string;
+  shopId: string;
+  operatorId: string;
+  stockUsedIn: number;
+  scrapLengthIn: number;
+  scrapPercent?: number;
+  isScrapFree: boolean;
+  scrapFreeThresholdPercent?: number;
+  closedAt: Date;
+}
+
+export interface ScrapFreeStats {
+  operatorId?: string;
+  shopId?: string;
+  totalRuns: number;
+  scrapFreeRuns: number;
+  scrapFreeRatePercent: number;
 }
