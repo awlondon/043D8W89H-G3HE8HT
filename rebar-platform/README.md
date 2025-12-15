@@ -39,5 +39,7 @@ pnpm dev:tablet   # Start the React Native field tablet app
 - [Cutter App Spec](docs/product/cutter_app_spec.md)
 - [MVP Workflow Spec](docs/product/mvp_spec.md)
 - [Pallet Planning Spec](docs/product/pallet_planning.md)
+- [AppSheet Rebar Cutting Blueprint](docs/product/appsheet_rebar_cutting_blueprint.md)
+- [Decentralized Bench Network Vision](docs/product/decentralized_bench_vision.md)
 
 Refer to `docs/engineering/dev_guide.md` for local environment setup, data seeding, and service orchestration.
