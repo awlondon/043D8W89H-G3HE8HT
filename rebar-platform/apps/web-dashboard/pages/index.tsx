@@ -46,6 +46,16 @@ export default function HomePage() {
             {shopScrapFree.scrapFreeRuns} of {shopScrapFree.totalRuns} runs
           </small>
         </div>
+        <div style={{ marginTop: 12, padding: 12, border: '1px solid #ccc', borderRadius: 8 }}>
+          <div style={{ fontWeight: 600 }}>Scrap-Free Run Rate (Last 30 Days)</div>
+          <div style={{ fontSize: 18 }}>
+            {shopScrapFree.scrapFreeRatePercent}% ({shopScrapFree.scrapFreeRuns} of
+            {` ${shopScrapFree.totalRuns} runs`})
+          </div>
+          <a href="/runs" style={{ color: '#1e3a8a', textDecoration: 'underline' }}>
+            View underlying run list
+          </a>
+        </div>
       </section>
     </main>
   );

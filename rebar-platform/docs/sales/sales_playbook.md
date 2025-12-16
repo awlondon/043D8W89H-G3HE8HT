@@ -15,7 +15,7 @@
 
 #### Scrap-Free Results (In Practice)
 
-- "Scrap-free" is defined as runs under a configurable scrap threshold (e.g. 2%).
-- The platform tracks scrap-free run rate by operator and shop.
-- This makes "scrap-free results" a measurable metric, not just a slogan.
-- See [Cutter App Specification](../product/cutter_app_spec.md#scrap-free-metric).
+- **Scrap-free results (in practice):** Runs are marked scrap-free when scrap is below a
+  configurable threshold (e.g., ≤ 2%). The app tracks scrap-free run rates by operator and shop
+  to prove waste reduction. See the [Cutter App Specification](../product/cutter_app_spec.md#scrap-free-metric)
+  for the precise definition.

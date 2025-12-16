@@ -202,11 +202,10 @@ export default function App() {
     </View>
   );
 
-  const renderScrapBadge = (run: ProductionRunSummary) => (
-    <Text style={[styles.tag, run.isScrapFree ? styles.tagSuccess : styles.tagMuted]}>
-      {run.isScrapFree ? 'SCRAP-FREE' : 'SCRAP TRACKED'}
-    </Text>
-  );
+  const renderScrapBadge = (run: ProductionRunSummary) => {
+    if (!run.isScrapFree) return null;
+    return <Text style={[styles.tag, styles.tagSuccess]}>SCRAP-FREE</Text>;
+  };
 
   const renderRunCard = (run: ProductionRunSummary) => (
     <View key={run.id} style={styles.card}>
@@ -220,7 +219,10 @@ export default function App() {
           Scrap-free target hit (scrap ≤ {run.scrapFreeThresholdPercent.toFixed(1)}%).
         </Text>
       ) : (
-        <Text style={styles.warning}>Scrap-free target missed (scrap = {run.scrapPercent.toFixed(1)}%).</Text>
+        <Text style={styles.warning}>
+          Scrap-free target missed (scrap = {run.scrapPercent.toFixed(1)}%; target ≤
+          {` ${run.scrapFreeThresholdPercent.toFixed(1)}%`} ).
+        </Text>
       )}
       <Text style={styles.copy}>
         Scrap captured: {run.scrapLengthIn.toFixed(1)} in from {run.stockUsedIn.toFixed(0)} in stock used.

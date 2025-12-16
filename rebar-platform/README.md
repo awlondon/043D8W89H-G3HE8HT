@@ -15,7 +15,9 @@ This monorepo hosts applications and services for the rebar fabrication platform
 
 ## Features
 
-- Scrap-free results (in practice): track scrap-free runs with configurable thresholds and operator/shop-level metrics.
+- Scrap-free results (in practice): the system measures scrap percentage after every run and flags
+  runs as scrap-free when they stay under a configurable threshold. Scrap-free rates are tracked by
+  operator and by shop.
 - Pallet planning: layer-by-layer stacking plans that keep pallets within forklift weight limits and reduce restacking.
 
 ## Getting Started
