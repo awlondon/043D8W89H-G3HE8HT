@@ -4,6 +4,9 @@ import {
   PalletLayer,
   PalletPiece,
   PalletStatus,
+  MachineConfig,
+  PerceivedStretch,
+  FeedDraw,
   PlannedPalletDto,
   ProductionRun,
   Project,
@@ -67,6 +70,51 @@ const shopSettings: ShopSettings[] = [
   },
 ];
 
+const perceivedStretches: PerceivedStretch[] = [
+  { id: 'stretch-4-90', barSize: '#4', angleDeg: 90, offsetIn: 1.5, isDefault: true },
+  { id: 'stretch-4-135', barSize: '#4', angleDeg: 135, offsetIn: 0, isDefault: true },
+  { id: 'stretch-4-180', barSize: '#4', angleDeg: 180, offsetIn: -1.5, isDefault: true },
+  { id: 'stretch-5-90', barSize: '#5', angleDeg: 90, offsetIn: 2, isDefault: true },
+  { id: 'stretch-5-135', barSize: '#5', angleDeg: 135, offsetIn: 0, isDefault: true },
+  { id: 'stretch-5-180', barSize: '#5', angleDeg: 180, offsetIn: -2, isDefault: true },
+  { id: 'stretch-6-90', barSize: '#6', angleDeg: 90, offsetIn: 2, isDefault: true },
+  { id: 'stretch-6-135', barSize: '#6', angleDeg: 135, offsetIn: 0, isDefault: true },
+  { id: 'stretch-6-180', barSize: '#6', angleDeg: 180, offsetIn: -2, isDefault: true },
+];
+
+const feedDraws: FeedDraw[] = [
+  { id: 'feed-4-90', barSize: '#4', angleDeg: 90, drawIn: 0, isDefault: true, isProvisional: false },
+  { id: 'feed-4-135', barSize: '#4', angleDeg: 135, drawIn: 1.5, isDefault: true, isProvisional: false },
+  { id: 'feed-4-180', barSize: '#4', angleDeg: 180, drawIn: 3, isDefault: true, isProvisional: false },
+  { id: 'feed-5-90', barSize: '#5', angleDeg: 90, drawIn: 0.5, isDefault: true, isProvisional: true },
+  { id: 'feed-5-135', barSize: '#5', angleDeg: 135, drawIn: 2.5, isDefault: true, isProvisional: true },
+  { id: 'feed-5-180', barSize: '#5', angleDeg: 180, drawIn: 4.5, isDefault: true, isProvisional: true },
+  { id: 'feed-6-90', barSize: '#6', angleDeg: 90, drawIn: 0.5, isDefault: true, isProvisional: true },
+  { id: 'feed-6-135', barSize: '#6', angleDeg: 135, drawIn: 2.5, isDefault: true, isProvisional: true },
+  { id: 'feed-6-180', barSize: '#6', angleDeg: 180, drawIn: 4.5, isDefault: true, isProvisional: true },
+];
+
+const machineConfigs: MachineConfig[] = [
+  {
+    id: 'machine-123-base',
+    machineId: 'machine-123',
+    mode: 'BASE',
+    offset4BarIn: 1.0,
+    offset5BarIn: 0.0,
+    offset6BarIn: 0.0,
+    globalConfigOffsetIn: 0.0,
+  },
+  {
+    id: 'machine-456-swapped',
+    machineId: 'machine-456',
+    mode: 'BOTH_SWAPPED',
+    offset4BarIn: 1.0,
+    offset5BarIn: 0.0,
+    offset6BarIn: 0.0,
+    globalConfigOffsetIn: 2.25,
+  },
+];
+
 let pallets: Pallet[] = [];
 let palletLayers: PalletLayer[] = [];
 let palletPieces: PalletPiece[] = [];
@@ -109,6 +157,82 @@ export function getShopConfigForProject(projectId: string): ShopPalletConfig | u
 
 export function getShopSettings(shopId: string): ShopSettings | undefined {
   return shopSettings.find((settings) => settings.shopId === shopId);
+}
+
+export function listPerceivedStretch(): PerceivedStretch[] {
+  return perceivedStretches;
+}
+
+export function findPerceivedStretch(barSize: string, angleDeg: number): PerceivedStretch | undefined {
+  return perceivedStretches.find((entry) => entry.barSize === barSize && entry.angleDeg === angleDeg);
+}
+
+export function updatePerceivedStretch(
+  id: string,
+  input: Partial<Pick<PerceivedStretch, 'angleDeg' | 'barSize' | 'offsetIn' | 'isDefault'>>,
+): PerceivedStretch | undefined {
+  const existing = perceivedStretches.find((entry) => entry.id === id);
+  if (!existing) return undefined;
+  Object.assign(existing, input);
+  return existing;
+}
+
+export function addPerceivedStretch(input: Omit<PerceivedStretch, 'id'>): PerceivedStretch {
+  const record: PerceivedStretch = { ...input, id: randomUUID() };
+  perceivedStretches.push(record);
+  return record;
+}
+
+export function listFeedDraws(): FeedDraw[] {
+  return feedDraws;
+}
+
+export function findFeedDraw(barSize: string, angleDeg: number): FeedDraw | undefined {
+  return feedDraws.find((entry) => entry.barSize === barSize && entry.angleDeg === angleDeg);
+}
+
+export function updateFeedDraw(
+  id: string,
+  input: Partial<Pick<FeedDraw, 'angleDeg' | 'barSize' | 'drawIn' | 'isDefault' | 'isProvisional'>>,
+): FeedDraw | undefined {
+  const existing = feedDraws.find((entry) => entry.id === id);
+  if (!existing) return undefined;
+  Object.assign(existing, input);
+  return existing;
+}
+
+export function addFeedDraw(input: Omit<FeedDraw, 'id'>): FeedDraw {
+  const record: FeedDraw = { ...input, id: randomUUID() };
+  feedDraws.push(record);
+  return record;
+}
+
+export function listMachineConfigs(): MachineConfig[] {
+  return machineConfigs;
+}
+
+export function getMachineConfig(machineId: string): MachineConfig | undefined {
+  return machineConfigs.find((config) => config.machineId === machineId);
+}
+
+export function updateMachineConfig(
+  machineId: string,
+  input: Partial<Omit<MachineConfig, 'id' | 'machineId'>>,
+): MachineConfig | undefined {
+  const existing = getMachineConfig(machineId);
+  if (!existing) return undefined;
+  Object.assign(existing, input);
+  return existing;
+}
+
+export function ensureMachineConfig(machineId: string, input: Omit<MachineConfig, 'id' | 'machineId'>): MachineConfig {
+  const existing = getMachineConfig(machineId);
+  if (existing) {
+    return updateMachineConfig(machineId, input) ?? existing;
+  }
+  const created: MachineConfig = { ...input, machineId, id: randomUUID() };
+  machineConfigs.push(created);
+  return created;
 }
 
 export function getShapesForProject(projectId: string, shapeIds?: string[]): Shape[] {
@@ -187,7 +311,19 @@ export function resetAllPallets() {
 }
 
 export function getInventorySnapshot() {
-  return { projects, shapes, pallets, palletLayers, palletPieces, shopConfigs, shopSettings, productionRuns };
+  return {
+    projects,
+    shapes,
+    pallets,
+    palletLayers,
+    palletPieces,
+    shopConfigs,
+    shopSettings,
+    productionRuns,
+    perceivedStretches,
+    feedDraws,
+    machineConfigs,
+  };
 }
 
 export function upsertProductionRun(run: ProductionRun): ProductionRun {

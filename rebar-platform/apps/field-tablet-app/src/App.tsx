@@ -37,10 +37,96 @@ type Project = {
   name: string;
 };
 
+type MachineMode = 'BASE' | 'ONE_BACKPLATE_REMOVED' | 'BOTH_SWAPPED';
+
+type MachineConfig = {
+  machineId: string;
+  mode: MachineMode;
+  offset4BarIn: number;
+  offset5BarIn: number;
+  offset6BarIn: number;
+  globalConfigOffsetIn: number;
+};
+
+type BendInput = {
+  id: string;
+  label: string;
+  machineId: string;
+  barSize: '#4' | '#5' | '#6';
+  angleDeg: 90 | 135 | 180;
+  targetBendSideLengthIn: number;
+};
+
+type BendSetpoints = {
+  effectiveBendSideLengthIn: number;
+  feedDrawIn: number;
+  machineOffsetIn: number;
+  measureFromFeedDatumIn: number;
+  provisionalFeed: boolean;
+};
+
 const sampleProject: Project = {
   id: 'project-1',
   name: 'Highway Overpass Retrofit',
 };
+
+const perceivedStretch = {
+  '#4': { 90: 1.5, 135: 0, 180: -1.5 },
+  '#5': { 90: 2, 135: 0, 180: -2 },
+  '#6': { 90: 2, 135: 0, 180: -2 },
+} as const;
+
+const feedDraws = {
+  '#4': { 90: { drawIn: 0, provisional: false }, 135: { drawIn: 1.5, provisional: false }, 180: { drawIn: 3, provisional: false } },
+  '#5': { 90: { drawIn: 0.5, provisional: true }, 135: { drawIn: 2.5, provisional: true }, 180: { drawIn: 4.5, provisional: true } },
+  '#6': { 90: { drawIn: 0.5, provisional: true }, 135: { drawIn: 2.5, provisional: true }, 180: { drawIn: 4.5, provisional: true } },
+} as const;
+
+const machineConfigs: MachineConfig[] = [
+  { machineId: 'machine-123', mode: 'BASE', offset4BarIn: 1, offset5BarIn: 0, offset6BarIn: 0, globalConfigOffsetIn: 0 },
+  { machineId: 'machine-456', mode: 'BOTH_SWAPPED', offset4BarIn: 1, offset5BarIn: 0, offset6BarIn: 0, globalConfigOffsetIn: 2.25 },
+];
+
+const bendingQueue: BendInput[] = [
+  {
+    id: 'bend-1',
+    label: '#5 @ 90° to 24"',
+    machineId: 'machine-123',
+    barSize: '#5',
+    angleDeg: 90,
+    targetBendSideLengthIn: 24,
+  },
+  {
+    id: 'bend-2',
+    label: '#6 @ 135° to 30"',
+    machineId: 'machine-123',
+    barSize: '#6',
+    angleDeg: 135,
+    targetBendSideLengthIn: 30,
+  },
+];
+
+function resolveMachineOffset(config: MachineConfig, barSize: BendInput['barSize']) {
+  const perBar =
+    barSize === '#4' ? config.offset4BarIn : barSize === '#5' ? config.offset5BarIn : config.offset6BarIn;
+  return perBar + config.globalConfigOffsetIn;
+}
+
+function computeBendSetpointsForTask(task: BendInput, config: MachineConfig): BendSetpoints {
+  const stretch = perceivedStretch[task.barSize][task.angleDeg];
+  const feed = feedDraws[task.barSize][task.angleDeg];
+  const machineOffset = resolveMachineOffset(config, task.barSize);
+  const effectiveBendSideLengthIn = task.targetBendSideLengthIn + stretch;
+  const measureFromFeedDatumIn = effectiveBendSideLengthIn + feed.drawIn + machineOffset;
+
+  return {
+    effectiveBendSideLengthIn,
+    feedDrawIn: feed.drawIn,
+    machineOffsetIn: machineOffset,
+    measureFromFeedDatumIn,
+    provisionalFeed: feed.provisional,
+  };
+}
 
 type ProductionRunSummary = {
   id: string;
@@ -146,7 +232,8 @@ type ScreenState =
   | { screen: 'projectList' }
   | { screen: 'projectDetail'; project: Project }
   | { screen: 'palletList'; project: Project }
-  | { screen: 'palletDetail'; project: Project; pallet: PalletPlan };
+  | { screen: 'palletDetail'; project: Project; pallet: PalletPlan }
+  | { screen: 'benderRun'; project: Project };
 
 export default function App() {
   const [pallets, setPallets] = useState<PalletPlan[]>([]);
@@ -154,6 +241,8 @@ export default function App() {
   const [runs] = useState<ProductionRunSummary[]>(mockRuns);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
   const [queuedStatuses, setQueuedStatuses] = useState<string[]>([]);
+  const [bendIndex, setBendIndex] = useState(0);
+  const [machineMode, setMachineMode] = useState<MachineMode>('BASE');
 
   const hasPlans = pallets.length > 0;
   const cachedTime = useMemo(() => (lastSynced ? lastSynced.toLocaleTimeString() : 'not synced'), [lastSynced]);
@@ -193,7 +282,7 @@ export default function App() {
       <Text style={styles.copy}>Actions</Text>
       <Button title="View job sheet" onPress={() => {}} />
       <Button title="View cutter plan" onPress={() => {}} />
-      <Button title="View bender plan" onPress={() => {}} />
+      <Button title="View bender plan" onPress={() => setScreen({ screen: 'benderRun', project })} />
       <Button title="Pallet plans" onPress={() => setScreen({ screen: 'palletList', project })} />
 
       <Text style={styles.heading}>Recent cutter runs</Text>
@@ -313,6 +402,64 @@ export default function App() {
     </View>
   );
 
+  const renderBenderRun = (project: Project) => {
+    const activeBend = bendingQueue[bendIndex % bendingQueue.length];
+    const baseConfig = machineConfigs.find((config) => config.machineId === activeBend.machineId) ?? machineConfigs[0];
+    const appliedConfig: MachineConfig = {
+      ...baseConfig,
+      mode: machineMode,
+      globalConfigOffsetIn: machineMode === 'BOTH_SWAPPED' ? 2.25 : baseConfig.globalConfigOffsetIn,
+    };
+    const setpoints = computeBendSetpointsForTask(activeBend, appliedConfig);
+    const modeLabel =
+      machineMode === 'BASE'
+        ? 'Base backplates'
+        : machineMode === 'ONE_BACKPLATE_REMOVED'
+          ? 'One backplate removed'
+          : 'Both swapped (+2.25")';
+
+    return (
+      <View style={styles.panel}>
+        <Text style={styles.heading}>Bender station · {project.name}</Text>
+        <Text style={styles.copy}>Shape: {activeBend.label}</Text>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Measure from feed datum</Text>
+          <Text style={[styles.heading, { marginTop: 4 }]}>{setpoints.measureFromFeedDatumIn.toFixed(2)}"</Text>
+          <Text style={styles.copy}>Bend-side effective length: {setpoints.effectiveBendSideLengthIn.toFixed(2)}"</Text>
+          <Text style={styles.copy}>Feed draw: {setpoints.feedDrawIn.toFixed(2)}" · Machine offset: {setpoints.machineOffsetIn.toFixed(2)}"</Text>
+          {setpoints.provisionalFeed && (
+            <Text style={styles.warning}>⚠ Provisional feed datum — supervisor review recommended.</Text>
+          )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Machine state</Text>
+          <Text style={styles.copy}>Machine: {appliedConfig.machineId}</Text>
+          <Text style={styles.copy}>Backplate mode: {modeLabel}</Text>
+          <View style={styles.buttonRow}>
+            <Button title="Base" onPress={() => setMachineMode('BASE')} />
+            <Button title="One off" onPress={() => setMachineMode('ONE_BACKPLATE_REMOVED')} />
+            <Button title="Both swapped" onPress={() => setMachineMode('BOTH_SWAPPED')} />
+          </View>
+          <Text style={styles.copy}>
+            Effective offsets: #4 → {resolveMachineOffset(appliedConfig, '#4').toFixed(2)}", #5 →
+            {` ${resolveMachineOffset(appliedConfig, '#5').toFixed(2)}"`} · #6 →
+            {` ${resolveMachineOffset(appliedConfig, '#6').toFixed(2)}"`}
+          </Text>
+        </View>
+
+        <View style={styles.buttonRow}>
+          <Button title="Next bend" onPress={() => setBendIndex((idx) => (idx + 1) % bendingQueue.length)} />
+          <Button title="Back to project" onPress={() => setScreen({ screen: 'projectDetail', project })} />
+        </View>
+        <Text style={styles.copy}>
+          AR overlays: use bend-side effective length on the bend side and feed-datum measurement for tape placement on the feed side.
+        </Text>
+      </View>
+    );
+  };
+
   let content: JSX.Element;
   switch (screen.screen) {
     case 'projectList':
@@ -326,6 +473,9 @@ export default function App() {
       break;
     case 'palletDetail':
       content = renderPalletDetail(screen.project, screen.pallet);
+      break;
+    case 'benderRun':
+      content = renderBenderRun(screen.project);
       break;
     default:
       content = renderProjectList();

@@ -19,6 +19,8 @@ This monorepo hosts applications and services for the rebar fabrication platform
   runs as scrap-free when they stay under a configurable threshold. Scrap-free rates are tracked by
   operator and by shop.
 - Pallet planning: layer-by-layer stacking plans that keep pallets within forklift weight limits and reduce restacking.
+- Multi-datum bend compensation: the Bender app uses a three-chart model (stretch, feed, machine datum) to give
+  operator-neutral, reproducible bend instructions.
 
 ## Getting Started
 
