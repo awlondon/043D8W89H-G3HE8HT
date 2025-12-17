@@ -74,6 +74,43 @@ export interface PlannedPalletDto extends Pallet {
   layers: PlannedLayerDto[];
 }
 
+export type MachineMode = 'BASE' | 'ONE_BACKPLATE_REMOVED' | 'BOTH_SWAPPED';
+
+export interface PerceivedStretch {
+  id: string;
+  barSize: string;
+  angleDeg: number;
+  offsetIn: number;
+  isDefault: boolean;
+}
+
+export interface FeedDraw {
+  id: string;
+  barSize: string;
+  angleDeg: number;
+  drawIn: number;
+  isDefault: boolean;
+  isProvisional: boolean;
+}
+
+export interface MachineConfig {
+  id: string;
+  machineId: string;
+  mode: MachineMode;
+  offset4BarIn: number;
+  offset5BarIn: number;
+  offset6BarIn: number;
+  globalConfigOffsetIn: number;
+}
+
+export interface BendSetpoints {
+  effectiveBendSideLengthIn: number;
+  feedDrawIn: number;
+  machineOffsetIn: number;
+  measureFromFeedDatumIn: number;
+  provisionalFeed: boolean;
+}
+
 export interface PalletPlanningInput {
   projectId: string;
   shapeIds?: string[];
