@@ -26,21 +26,21 @@ type FeedDrawLookup = { drawIn: number; provisional: boolean };
 
 @Injectable()
 export class BendCompensationService {
-  getPerceivedStretch(barSize: string, angleDeg: number): number {
-    const record = findPerceivedStretch(barSize, angleDeg);
+  async getPerceivedStretch(barSize: string, angleDeg: number): Promise<number> {
+    const record = await findPerceivedStretch(barSize, angleDeg);
     return record?.offsetIn ?? 0;
   }
 
-  getFeedDraw(barSize: string, angleDeg: number): FeedDrawLookup {
-    const record = findFeedDraw(barSize, angleDeg);
+  async getFeedDraw(barSize: string, angleDeg: number): Promise<FeedDrawLookup> {
+    const record = await findFeedDraw(barSize, angleDeg);
     if (!record) {
       throw new Error(`Feed draw not found for ${barSize} at ${angleDeg}deg`);
     }
     return { drawIn: record.drawIn, provisional: record.isProvisional };
   }
 
-  getMachineOffset(machineId: string, barSize: string): number {
-    const config = getMachineConfigRecord(machineId);
+  async getMachineOffset(machineId: string, barSize: string): Promise<number> {
+    const config = await getMachineConfigRecord(machineId);
     if (!config) {
       throw new Error(`Machine config not found for ${machineId}`);
     }
@@ -49,10 +49,10 @@ export class BendCompensationService {
     return perBarOffset + config.globalConfigOffsetIn;
   }
 
-  computeBendSetpoints(params: BendSetpointInput): BendSetpoints {
-    const stretch = this.getPerceivedStretch(params.barSize, params.angleDeg);
-    const { drawIn, provisional } = this.getFeedDraw(params.barSize, params.angleDeg);
-    const machineOffset = this.getMachineOffset(params.machineId, params.barSize);
+  async computeBendSetpoints(params: BendSetpointInput): Promise<BendSetpoints> {
+    const stretch = await this.getPerceivedStretch(params.barSize, params.angleDeg);
+    const { drawIn, provisional } = await this.getFeedDraw(params.barSize, params.angleDeg);
+    const machineOffset = await this.getMachineOffset(params.machineId, params.barSize);
 
     const effectiveBendSideLengthIn = params.targetBendSideLengthIn + stretch;
     const measureFromFeedDatumIn = effectiveBendSideLengthIn + drawIn + machineOffset;
@@ -66,59 +66,62 @@ export class BendCompensationService {
     };
   }
 
-  listPerceivedStretch(): PerceivedStretch[] {
+  listPerceivedStretch(): Promise<PerceivedStretch[]> {
     return listPerceivedStretch();
   }
 
-  updatePerceivedStretch(id: string, input: Partial<PerceivedStretch>): PerceivedStretch {
-    const updated = updatePerceivedStretch(id, input);
+  async updatePerceivedStretch(id: string, input: Partial<PerceivedStretch>): Promise<PerceivedStretch> {
+    const updated = await updatePerceivedStretch(id, input);
     if (!updated) {
       throw new Error('Perceived stretch entry not found');
     }
     return updated;
   }
 
-  addPerceivedStretch(input: Omit<PerceivedStretch, 'id'>): PerceivedStretch {
+  addPerceivedStretch(input: Omit<PerceivedStretch, 'id'>): Promise<PerceivedStretch> {
     return addPerceivedStretch(input);
   }
 
-  listFeedDraws(): FeedDraw[] {
+  listFeedDraws(): Promise<FeedDraw[]> {
     return listFeedDraws();
   }
 
-  updateFeedDraw(id: string, input: Partial<FeedDraw>): FeedDraw {
-    const updated = updateFeedDraw(id, input);
+  async updateFeedDraw(id: string, input: Partial<FeedDraw>): Promise<FeedDraw> {
+    const updated = await updateFeedDraw(id, input);
     if (!updated) {
       throw new Error('Feed draw entry not found');
     }
     return updated;
   }
 
-  addFeedDraw(input: Omit<FeedDraw, 'id'>): FeedDraw {
+  addFeedDraw(input: Omit<FeedDraw, 'id'>): Promise<FeedDraw> {
     return addFeedDraw(input);
   }
 
-  getMachineConfigs(): MachineConfig[] {
+  getMachineConfigs(): Promise<MachineConfig[]> {
     return listMachineConfigs();
   }
 
-  getMachineConfig(machineId: string): MachineConfig {
-    const config = getMachineConfigRecord(machineId);
+  async getMachineConfig(machineId: string): Promise<MachineConfig> {
+    const config = await getMachineConfigRecord(machineId);
     if (!config) {
       throw new Error('Machine config not found');
     }
     return config;
   }
 
-  updateMachineConfig(machineId: string, input: Partial<Omit<MachineConfig, 'id' | 'machineId'>>): MachineConfig {
-    const updated = updateMachineConfigRecord(machineId, input);
+  async updateMachineConfig(
+    machineId: string,
+    input: Partial<Omit<MachineConfig, 'id' | 'machineId'>>,
+  ): Promise<MachineConfig> {
+    const updated = await updateMachineConfigRecord(machineId, input);
     if (!updated) {
       throw new Error('Machine config not found');
     }
     return updated;
   }
 
-  upsertMachineConfig(machineId: string, input: Omit<MachineConfig, 'id' | 'machineId'>): MachineConfig {
+  upsertMachineConfig(machineId: string, input: Omit<MachineConfig, 'id' | 'machineId'>): Promise<MachineConfig> {
     return ensureMachineConfig(machineId, input);
   }
 

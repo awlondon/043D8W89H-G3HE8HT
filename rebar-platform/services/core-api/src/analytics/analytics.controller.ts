@@ -5,11 +5,11 @@ import { ScrapFreeStats } from '../data/models';
 @Controller('analytics')
 export class AnalyticsController {
   @Get('operators/:operatorId/scrap-free')
-  getOperatorScrapFree(
+  async getOperatorScrapFree(
     @Param('operatorId') operatorId: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-  ): ScrapFreeStats {
+  ): Promise<ScrapFreeStats> {
     // Date filtering would be handled in the data layer; parameters are accepted for parity with other analytics endpoints.
     return computeScrapFreeStats({ operatorId });
   }
@@ -19,7 +19,7 @@ export class AnalyticsController {
     @Param('shopId') shopId: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-  ): ScrapFreeStats {
+  ): Promise<ScrapFreeStats> {
     return computeScrapFreeStats({ shopId });
   }
 }

@@ -52,27 +52,27 @@ export function checkLengthMismatch(layer: WorkingLayer, item: PlanningItem) {
 export class PalletPlannerService {
   private palletCounter = 1;
 
-  generatePlan(input: PalletPlanningInput): PlannedPalletDto[] {
-    const project = getProject(input.projectId);
+  async generatePlan(input: PalletPlanningInput): Promise<PlannedPalletDto[]> {
+    const project = await getProject(input.projectId);
     if (!project) {
       throw new Error(`Project ${input.projectId} not found`);
     }
 
-    const shopConfig = getShopConfigForProject(project.id);
+    const shopConfig = await getShopConfigForProject(project.id);
     const maxWeight = input.maxPalletWeightLbs ?? shopConfig?.defaultMaxPalletWeightLbs ?? 3000;
     const palletLengthIn = shopConfig?.palletLengthIn ?? 96;
     const allowOverhangIn = shopConfig?.allowOverhangIn ?? 12;
 
-    const shapes = getShapesForProject(input.projectId, input.shapeIds);
+    const shapes = await getShapesForProject(input.projectId, input.shapeIds);
     if (shapes.length === 0) {
       throw new Error('No shapes found for planning');
     }
 
-    clearPalletsForProject(project.id);
+    await clearPalletsForProject(project.id);
 
     const items = this.buildPlanningItems(shapes);
-    const pallets = this.buildPallets(items, maxWeight, palletLengthIn, allowOverhangIn, project.id);
-    return pallets.map((pallet) => getPalletWithLayers(pallet.id) as PlannedPalletDto);
+    const pallets = await this.buildPallets(items, maxWeight, palletLengthIn, allowOverhangIn, project.id);
+    return Promise.all(pallets.map((pallet) => getPalletWithLayers(pallet.id) as Promise<PlannedPalletDto>));
   }
 
   listProjectPlans(projectId: string) {
@@ -102,7 +102,7 @@ export class PalletPlannerService {
       });
   }
 
-  private buildPallets(
+  private async buildPallets(
     items: PlanningItem[],
     maxWeight: number,
     palletLengthIn: number,
@@ -123,7 +123,7 @@ export class PalletPlannerService {
 
         const willExceed = current.totalWeightLbs + pieceWeight > maxWeight;
         if (willExceed) {
-          created.push(this.persistWorkingPallet(current));
+          created.push(await this.persistWorkingPallet(current));
           current = this.newWorkingPallet(projectId, maxWeight);
           layerSequence = [1];
         }
@@ -151,7 +151,7 @@ export class PalletPlannerService {
     });
 
     if (current && current.layers.some((layer) => layer.pieces.length > 0)) {
-      created.push(this.persistWorkingPallet(current));
+      created.push(await this.persistWorkingPallet(current));
     }
 
     return created;
@@ -201,14 +201,14 @@ export class PalletPlannerService {
     layer.weightLbs += weightPerPieceLbs;
   }
 
-  private persistWorkingPallet(pallet: WorkingPallet): Pallet {
-    const created = createPallet({
+  private async persistWorkingPallet(pallet: WorkingPallet): Promise<Pallet> {
+    const created = await createPallet({
       ...pallet,
       name: pallet.name,
     });
 
-    pallet.layers.forEach((layer) => {
-      const createdLayer = createLayer({
+    for (const layer of pallet.layers) {
+      const createdLayer = await createLayer({
         palletId: created.id,
         layerIndex: layer.layerIndex,
         weightLbs: layer.pieces.reduce((sum, piece) => sum + piece.totalWeightLbs, 0),
@@ -217,8 +217,8 @@ export class PalletPlannerService {
         overhangWarning: layer.overhangWarning,
       });
 
-      layer.pieces.forEach((piece) => {
-        createPiece({
+      for (const piece of layer.pieces) {
+        await createPiece({
           palletLayerId: createdLayer.id,
           shapeId: piece.shapeId,
           quantity: piece.quantity,
@@ -226,8 +226,8 @@ export class PalletPlannerService {
           totalWeightLbs: piece.totalWeightLbs,
           shapeLabel: piece.shapeLabel,
         });
-      });
-    });
+      }
+    }
 
     return created;
   }
