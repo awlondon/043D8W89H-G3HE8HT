@@ -15,8 +15,8 @@ export class RunsController {
   constructor(private readonly runs: RunsService) {}
 
   @Get('runs/:runId')
-  getRun(@Param('runId') runId: string): ProductionRun {
-    const run = this.runs.getRun(runId);
+  async getRun(@Param('runId') runId: string): Promise<ProductionRun> {
+    const run = await this.runs.getRun(runId);
     if (!run) {
       throw new Error('Run not found');
     }
@@ -24,12 +24,12 @@ export class RunsController {
   }
 
   @Get('projects/:projectId/runs')
-  listRuns(@Param('projectId') projectId: string): ProductionRun[] {
+  listRuns(@Param('projectId') projectId: string): Promise<ProductionRun[]> {
     return this.runs.listRuns(projectId);
   }
 
   @Post('runs/:runId/closeout')
-  closeout(@Param('runId') runId: string, @Body() body: CloseoutDto): ProductionRun {
+  closeout(@Param('runId') runId: string, @Body() body: CloseoutDto): Promise<ProductionRun> {
     return this.runs.closeoutRun(runId, body);
   }
 }

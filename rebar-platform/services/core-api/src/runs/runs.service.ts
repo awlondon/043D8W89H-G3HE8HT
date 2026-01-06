@@ -21,8 +21,8 @@ const DEFAULT_SCRAP_THRESHOLD = 2.0;
 
 @Injectable()
 export class RunsService {
-  closeoutRun(runId: string, input: CloseoutInput): ProductionRun {
-    const project = getProject(input.projectId);
+  async closeoutRun(runId: string, input: CloseoutInput): Promise<ProductionRun> {
+    const project = await getProject(input.projectId);
     if (!project) {
       throw new Error(`Project ${input.projectId} not found`);
     }
@@ -30,7 +30,7 @@ export class RunsService {
       throw new Error('Project does not belong to the given shop');
     }
 
-    const shopSettings = getShopSettings(input.shopId);
+    const shopSettings = await getShopSettings(input.shopId);
     const scrapFreeThresholdPercent = shopSettings?.scrapFreeThresholdPercent ?? DEFAULT_SCRAP_THRESHOLD;
     const normalizedStockUsed = input.stockUsedIn <= 0 ? 0 : input.stockUsedIn;
 
@@ -54,11 +54,11 @@ export class RunsService {
     return upsertProductionRun(toPersist);
   }
 
-  getRun(runId: string): ProductionRun | undefined {
+  getRun(runId: string): Promise<ProductionRun | null> {
     return getProductionRun(runId);
   }
 
-  listRuns(projectId: string): ProductionRun[] {
+  listRuns(projectId: string): Promise<ProductionRun[]> {
     return listRunsForProject(projectId);
   }
 }

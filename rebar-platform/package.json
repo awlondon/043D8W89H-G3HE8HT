@@ -9,7 +9,9 @@
     "dev:tablet": "pnpm --filter apps/field-tablet-app start",
     "dev:voice-agent": "pnpm --filter apps/voice-sales-agent-api start",
     "lint": "pnpm -r lint",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "prisma:generate": "pnpm --filter services/core-api prisma generate",
+    "prisma:migrate": "pnpm --filter services/core-api prisma migrate dev"
   },
   "workspaces": [
     "apps/*",

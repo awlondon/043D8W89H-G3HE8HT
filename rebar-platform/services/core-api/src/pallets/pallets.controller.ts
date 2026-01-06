@@ -35,8 +35,8 @@ export class PalletsController {
   }
 
   @Get('pallets/:palletId')
-  getPallet(@Param('palletId') palletId: string) {
-    const pallet = this.planner.getPallet(palletId);
+  async getPallet(@Param('palletId') palletId: string) {
+    const pallet = await this.planner.getPallet(palletId);
     if (!pallet) {
       throw new Error('Pallet not found');
     }
@@ -44,9 +44,9 @@ export class PalletsController {
   }
 
   @Patch('pallets/:palletId')
-  updateStatus(@Param('palletId') palletId: string, @Body() body: UpdatePalletStatusDto) {
+  async updateStatus(@Param('palletId') palletId: string, @Body() body: UpdatePalletStatusDto) {
     this.validateStatus(body.status);
-    const pallet = this.planner.updatePalletStatus(palletId, body.status);
+    const pallet = await this.planner.updatePalletStatus(palletId, body.status);
     if (!pallet) {
       throw new Error('Pallet not found');
     }

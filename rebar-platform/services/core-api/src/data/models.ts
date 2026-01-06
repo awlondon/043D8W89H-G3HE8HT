@@ -15,6 +15,7 @@ export interface Shape {
   quantity: number;
   maxLengthInches?: number;
   shapeType?: string;
+  jobSheetId?: string | null;
 }
 
 export interface ShopPalletConfig {

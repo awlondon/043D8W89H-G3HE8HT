@@ -1,12 +1,11 @@
-import { randomUUID } from 'crypto';
+import { Prisma, PrismaClient, PalletStatus as PrismaPalletStatus } from '@prisma/client';
 import {
+  FeedDraw,
+  MachineConfig,
   Pallet,
   PalletLayer,
   PalletPiece,
   PalletStatus,
-  MachineConfig,
-  PerceivedStretch,
-  FeedDraw,
   PlannedPalletDto,
   ProductionRun,
   Project,
@@ -14,303 +13,250 @@ import {
   Shape,
   ShopPalletConfig,
   ShopSettings,
+  PerceivedStretch,
 } from './models';
 
-const projects: Project[] = [
-  { id: 'project-1', name: 'Highway Overpass Retrofit', shopId: 'shop-1' },
-];
+const prisma = new PrismaClient();
 
-const shapes: Shape[] = [
-  {
-    id: 'shape-1',
-    projectId: 'project-1',
-    label: 'A21',
-    barSize: '#6',
-    finalLengthInches: 216,
-    quantity: 12,
-    maxLengthInches: 216,
-    shapeType: 'straight',
-  },
-  {
-    id: 'shape-2',
-    projectId: 'project-1',
-    label: 'B15',
-    barSize: '#4',
-    finalLengthInches: 144,
-    quantity: 20,
-    maxLengthInches: 144,
-    shapeType: 'stirrup',
-  },
-  {
-    id: 'shape-3',
-    projectId: 'project-1',
-    label: 'C05',
-    barSize: '#8',
-    finalLengthInches: 72,
-    quantity: 30,
-    maxLengthInches: 72,
-    shapeType: 'hook',
-  },
-];
-
-const shopConfigs: ShopPalletConfig[] = [
-  {
-    shopId: 'shop-1',
-    defaultMaxPalletWeightLbs: 3200,
-    palletLengthIn: 96,
-    palletWidthIn: 48,
-    allowOverhangIn: 12,
-  },
-];
-
-const shopSettings: ShopSettings[] = [
-  {
-    shopId: 'shop-1',
-    scrapFreeThresholdPercent: 2.0,
-  },
-];
-
-const perceivedStretches: PerceivedStretch[] = [
-  { id: 'stretch-4-90', barSize: '#4', angleDeg: 90, offsetIn: 1.5, isDefault: true },
-  { id: 'stretch-4-135', barSize: '#4', angleDeg: 135, offsetIn: 0, isDefault: true },
-  { id: 'stretch-4-180', barSize: '#4', angleDeg: 180, offsetIn: -1.5, isDefault: true },
-  { id: 'stretch-5-90', barSize: '#5', angleDeg: 90, offsetIn: 2, isDefault: true },
-  { id: 'stretch-5-135', barSize: '#5', angleDeg: 135, offsetIn: 0, isDefault: true },
-  { id: 'stretch-5-180', barSize: '#5', angleDeg: 180, offsetIn: -2, isDefault: true },
-  { id: 'stretch-6-90', barSize: '#6', angleDeg: 90, offsetIn: 2, isDefault: true },
-  { id: 'stretch-6-135', barSize: '#6', angleDeg: 135, offsetIn: 0, isDefault: true },
-  { id: 'stretch-6-180', barSize: '#6', angleDeg: 180, offsetIn: -2, isDefault: true },
-];
-
-const feedDraws: FeedDraw[] = [
-  { id: 'feed-4-90', barSize: '#4', angleDeg: 90, drawIn: 0, isDefault: true, isProvisional: false },
-  { id: 'feed-4-135', barSize: '#4', angleDeg: 135, drawIn: 1.5, isDefault: true, isProvisional: false },
-  { id: 'feed-4-180', barSize: '#4', angleDeg: 180, drawIn: 3, isDefault: true, isProvisional: false },
-  { id: 'feed-5-90', barSize: '#5', angleDeg: 90, drawIn: 0.5, isDefault: true, isProvisional: true },
-  { id: 'feed-5-135', barSize: '#5', angleDeg: 135, drawIn: 2.5, isDefault: true, isProvisional: true },
-  { id: 'feed-5-180', barSize: '#5', angleDeg: 180, drawIn: 4.5, isDefault: true, isProvisional: true },
-  { id: 'feed-6-90', barSize: '#6', angleDeg: 90, drawIn: 0.5, isDefault: true, isProvisional: true },
-  { id: 'feed-6-135', barSize: '#6', angleDeg: 135, drawIn: 2.5, isDefault: true, isProvisional: true },
-  { id: 'feed-6-180', barSize: '#6', angleDeg: 180, drawIn: 4.5, isDefault: true, isProvisional: true },
-];
-
-const machineConfigs: MachineConfig[] = [
-  {
-    id: 'machine-123-base',
-    machineId: 'machine-123',
-    mode: 'BASE',
-    offset4BarIn: 1.0,
-    offset5BarIn: 0.0,
-    offset6BarIn: 0.0,
-    globalConfigOffsetIn: 0.0,
-  },
-  {
-    id: 'machine-456-swapped',
-    machineId: 'machine-456',
-    mode: 'BOTH_SWAPPED',
-    offset4BarIn: 1.0,
-    offset5BarIn: 0.0,
-    offset6BarIn: 0.0,
-    globalConfigOffsetIn: 2.25,
-  },
-];
-
-let pallets: Pallet[] = [];
-let palletLayers: PalletLayer[] = [];
-let palletPieces: PalletPiece[] = [];
-let productionRuns: ProductionRun[] = [
-  {
-    id: 'run-1',
-    projectId: 'project-1',
-    shopId: 'shop-1',
-    operatorId: 'op-1',
-    stockUsedIn: 1200,
-    scrapLengthIn: 18,
-    scrapPercent: 1.5,
-    isScrapFree: true,
-    scrapFreeThresholdPercent: 2,
-    closedAt: new Date(),
-  },
-  {
-    id: 'run-2',
-    projectId: 'project-1',
-    shopId: 'shop-1',
-    operatorId: 'op-2',
-    stockUsedIn: 800,
-    scrapLengthIn: 24,
-    scrapPercent: 3,
-    isScrapFree: false,
-    scrapFreeThresholdPercent: 2,
-    closedAt: new Date(),
-  },
-];
-
-export function getProject(projectId: string): Project | undefined {
-  return projects.find((project) => project.id === projectId);
+function mapPalletStatus(status: PrismaPalletStatus): PalletStatus {
+  return status;
 }
 
-export function getShopConfigForProject(projectId: string): ShopPalletConfig | undefined {
-  const project = getProject(projectId);
+function toPalletDto(raw: Prisma.PalletGetPayload<{ include: { layers: { include: { pieces: true } } } }>): PlannedPalletDto {
+  return {
+    id: raw.id,
+    projectId: raw.projectId,
+    name: raw.name,
+    maxWeightLbs: raw.maxWeightLbs,
+    totalWeightLbs: raw.totalWeightLbs,
+    status: mapPalletStatus(raw.status),
+    overhangWarning: raw.overhangWarning ?? undefined,
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
+    layers: raw.layers
+      .sort((a, b) => a.layerIndex - b.layerIndex)
+      .map((layer) => ({
+        id: layer.id,
+        palletId: layer.palletId,
+        layerIndex: layer.layerIndex,
+        weightLbs: layer.weightLbs,
+        notes: layer.notes ?? undefined,
+        maxLengthInches: layer.maxLengthInches ?? undefined,
+        overhangWarning: layer.overhangWarning ?? undefined,
+        pieces: layer.pieces,
+      })),
+  };
+}
+
+export async function getProject(projectId: string): Promise<Project | null> {
+  return prisma.project.findUnique({ where: { id: projectId } });
+}
+
+export async function getShopConfigForProject(projectId: string): Promise<ShopPalletConfig | undefined> {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { shopId: true },
+  });
   if (!project) return undefined;
-  return shopConfigs.find((config) => config.shopId === project.shopId);
+  const config = await prisma.shopPalletConfig.findUnique({ where: { shopId: project.shopId } });
+  if (!config) return undefined;
+  return {
+    shopId: config.shopId,
+    defaultMaxPalletWeightLbs: config.defaultMaxPalletWeightLbs,
+    palletLengthIn: config.palletLengthIn,
+    palletWidthIn: config.palletWidthIn,
+    allowOverhangIn: config.allowOverhangIn,
+  };
 }
 
-export function getShopSettings(shopId: string): ShopSettings | undefined {
-  return shopSettings.find((settings) => settings.shopId === shopId);
+export async function getShopSettings(shopId: string): Promise<ShopSettings | undefined> {
+  const shop = await prisma.shop.findUnique({ where: { id: shopId } });
+  if (!shop) return undefined;
+  return { shopId: shop.id, scrapFreeThresholdPercent: shop.scrapFreeThresholdPercent };
 }
 
-export function listPerceivedStretch(): PerceivedStretch[] {
-  return perceivedStretches;
+export async function listPerceivedStretch(): Promise<PerceivedStretch[]> {
+  return prisma.perceivedStretch.findMany();
 }
 
-export function findPerceivedStretch(barSize: string, angleDeg: number): PerceivedStretch | undefined {
-  return perceivedStretches.find((entry) => entry.barSize === barSize && entry.angleDeg === angleDeg);
+export async function findPerceivedStretch(barSize: string, angleDeg: number): Promise<PerceivedStretch | null> {
+  return prisma.perceivedStretch.findFirst({ where: { barSize, angleDeg } });
 }
 
-export function updatePerceivedStretch(
+export async function updatePerceivedStretch(
   id: string,
   input: Partial<Pick<PerceivedStretch, 'angleDeg' | 'barSize' | 'offsetIn' | 'isDefault'>>,
-): PerceivedStretch | undefined {
-  const existing = perceivedStretches.find((entry) => entry.id === id);
-  if (!existing) return undefined;
-  Object.assign(existing, input);
-  return existing;
+): Promise<PerceivedStretch | undefined> {
+  try {
+    return await prisma.perceivedStretch.update({ where: { id }, data: input });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return undefined;
+    }
+    throw error;
+  }
 }
 
-export function addPerceivedStretch(input: Omit<PerceivedStretch, 'id'>): PerceivedStretch {
-  const record: PerceivedStretch = { ...input, id: randomUUID() };
-  perceivedStretches.push(record);
-  return record;
+export async function addPerceivedStretch(input: Omit<PerceivedStretch, 'id'>): Promise<PerceivedStretch> {
+  return prisma.perceivedStretch.create({ data: input });
 }
 
-export function listFeedDraws(): FeedDraw[] {
-  return feedDraws;
+export async function listFeedDraws(): Promise<FeedDraw[]> {
+  return prisma.feedDraw.findMany();
 }
 
-export function findFeedDraw(barSize: string, angleDeg: number): FeedDraw | undefined {
-  return feedDraws.find((entry) => entry.barSize === barSize && entry.angleDeg === angleDeg);
+export async function findFeedDraw(barSize: string, angleDeg: number): Promise<FeedDraw | null> {
+  return prisma.feedDraw.findFirst({ where: { barSize, angleDeg } });
 }
 
-export function updateFeedDraw(
+export async function updateFeedDraw(
   id: string,
   input: Partial<Pick<FeedDraw, 'angleDeg' | 'barSize' | 'drawIn' | 'isDefault' | 'isProvisional'>>,
-): FeedDraw | undefined {
-  const existing = feedDraws.find((entry) => entry.id === id);
-  if (!existing) return undefined;
-  Object.assign(existing, input);
-  return existing;
+): Promise<FeedDraw | undefined> {
+  try {
+    return await prisma.feedDraw.update({ where: { id }, data: input });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return undefined;
+    }
+    throw error;
+  }
 }
 
-export function addFeedDraw(input: Omit<FeedDraw, 'id'>): FeedDraw {
-  const record: FeedDraw = { ...input, id: randomUUID() };
-  feedDraws.push(record);
-  return record;
+export async function addFeedDraw(input: Omit<FeedDraw, 'id'>): Promise<FeedDraw> {
+  return prisma.feedDraw.create({ data: input });
 }
 
-export function listMachineConfigs(): MachineConfig[] {
-  return machineConfigs;
+export async function listMachineConfigs(): Promise<MachineConfig[]> {
+  return prisma.machineConfig.findMany();
 }
 
-export function getMachineConfig(machineId: string): MachineConfig | undefined {
-  return machineConfigs.find((config) => config.machineId === machineId);
+export async function getMachineConfig(machineId: string): Promise<MachineConfig | null> {
+  return prisma.machineConfig.findUnique({ where: { machineId } });
 }
 
-export function updateMachineConfig(
+export async function updateMachineConfig(
   machineId: string,
   input: Partial<Omit<MachineConfig, 'id' | 'machineId'>>,
-): MachineConfig | undefined {
-  const existing = getMachineConfig(machineId);
-  if (!existing) return undefined;
-  Object.assign(existing, input);
-  return existing;
-}
-
-export function ensureMachineConfig(machineId: string, input: Omit<MachineConfig, 'id' | 'machineId'>): MachineConfig {
-  const existing = getMachineConfig(machineId);
-  if (existing) {
-    return updateMachineConfig(machineId, input) ?? existing;
+): Promise<MachineConfig | undefined> {
+  try {
+    return await prisma.machineConfig.update({ where: { machineId }, data: input });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return undefined;
+    }
+    throw error;
   }
-  const created: MachineConfig = { ...input, machineId, id: randomUUID() };
-  machineConfigs.push(created);
-  return created;
 }
 
-export function getShapesForProject(projectId: string, shapeIds?: string[]): Shape[] {
-  const scoped = shapes.filter((shape) => shape.projectId === projectId);
-  if (!shapeIds || shapeIds.length === 0) return scoped;
-  return scoped.filter((shape) => shapeIds.includes(shape.id));
+export async function ensureMachineConfig(
+  machineId: string,
+  input: Omit<MachineConfig, 'id' | 'machineId'>,
+): Promise<MachineConfig> {
+  return prisma.machineConfig.upsert({
+    where: { machineId },
+    update: input,
+    create: { ...input, machineId },
+  });
 }
 
-export function clearPalletsForProject(projectId: string) {
-  pallets = pallets.filter((pallet) => pallet.projectId !== projectId);
-  const palletIds = new Set(pallets.map((pallet) => pallet.id));
-  palletLayers = palletLayers.filter((layer) => palletIds.has(layer.palletId));
-  const layerIds = new Set(palletLayers.map((layer) => layer.id));
-  palletPieces = palletPieces.filter((piece) => layerIds.has(piece.palletLayerId));
+export async function getShapesForProject(projectId: string, shapeIds?: string[]): Promise<Shape[]> {
+  return prisma.shape.findMany({
+    where: {
+      projectId,
+      ...(shapeIds && shapeIds.length > 0 ? { id: { in: shapeIds } } : {}),
+    },
+    orderBy: { label: 'asc' },
+  });
 }
 
-export function createPallet(input: Omit<Pallet, 'createdAt' | 'updatedAt' | 'id'>): Pallet {
-  const now = new Date();
-  const pallet: Pallet = { ...input, id: randomUUID(), createdAt: now, updatedAt: now };
-  pallets.push(pallet);
-  return pallet;
+export async function clearPalletsForProject(projectId: string) {
+  const pallets = await prisma.pallet.findMany({ where: { projectId } });
+  if (pallets.length === 0) return;
+  const palletIds = pallets.map((pallet) => pallet.id);
+  await prisma.$transaction([
+    prisma.palletPiece.deleteMany({ where: { layer: { palletId: { in: palletIds } } } }),
+    prisma.palletLayer.deleteMany({ where: { palletId: { in: palletIds } } }),
+    prisma.pallet.deleteMany({ where: { id: { in: palletIds } } }),
+  ]);
 }
 
-export function createLayer(input: Omit<PalletLayer, 'id'>): PalletLayer {
-  const layer: PalletLayer = { ...input, id: randomUUID() };
-  palletLayers.push(layer);
-  return layer;
+export async function createPallet(input: Omit<Pallet, 'createdAt' | 'updatedAt' | 'id'>): Promise<Pallet> {
+  const created = await prisma.pallet.create({
+    data: {
+      projectId: input.projectId,
+      name: input.name,
+      maxWeightLbs: input.maxWeightLbs,
+      totalWeightLbs: input.totalWeightLbs,
+      status: input.status as PrismaPalletStatus,
+      overhangWarning: input.overhangWarning,
+    },
+  });
+  return { ...created, status: mapPalletStatus(created.status) };
 }
 
-export function createPiece(input: Omit<PalletPiece, 'id'>): PalletPiece {
-  const piece: PalletPiece = { ...input, id: randomUUID() };
-  palletPieces.push(piece);
-  return piece;
+export async function createLayer(input: Omit<PalletLayer, 'id'>): Promise<PalletLayer> {
+  return prisma.palletLayer.create({ data: input });
 }
 
-export function updatePalletStatus(palletId: string, status: PalletStatus): Pallet | undefined {
-  const target = pallets.find((pallet) => pallet.id === palletId);
-  if (!target) return undefined;
-  target.status = status;
-  target.updatedAt = new Date();
-  return target;
+export async function createPiece(input: Omit<PalletPiece, 'id'>): Promise<PalletPiece> {
+  return prisma.palletPiece.create({ data: input });
 }
 
-export function listPalletsForProject(projectId: string): PlannedPalletDto[] {
-  return pallets
-    .filter((pallet) => pallet.projectId === projectId)
-    .map((pallet) => {
-      const layers = palletLayers
-        .filter((layer) => layer.palletId === pallet.id)
-        .sort((a, b) => a.layerIndex - b.layerIndex)
-        .map((layer) => ({
-          ...layer,
-          pieces: palletPieces.filter((piece) => piece.palletLayerId === layer.id),
-        }));
-      return { ...pallet, layers };
-    });
+export async function updatePalletStatus(palletId: string, status: PalletStatus): Promise<Pallet | undefined> {
+  try {
+    const updated = await prisma.pallet.update({ where: { id: palletId }, data: { status: status as PrismaPalletStatus } });
+    return { ...updated, status };
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return undefined;
+    }
+    throw error;
+  }
 }
 
-export function getPalletWithLayers(palletId: string): PlannedPalletDto | undefined {
-  const pallet = pallets.find((p) => p.id === palletId);
+export async function listPalletsForProject(projectId: string): Promise<PlannedPalletDto[]> {
+  const pallets = await prisma.pallet.findMany({
+    where: { projectId },
+    include: { layers: { include: { pieces: true } } },
+    orderBy: { createdAt: 'asc' },
+  });
+  return pallets.map(toPalletDto);
+}
+
+export async function getPalletWithLayers(palletId: string): Promise<PlannedPalletDto | undefined> {
+  const pallet = await prisma.pallet.findUnique({
+    where: { id: palletId },
+    include: { layers: { include: { pieces: true } } },
+  });
   if (!pallet) return undefined;
-  const layers = palletLayers
-    .filter((layer) => layer.palletId === pallet.id)
-    .sort((a, b) => a.layerIndex - b.layerIndex)
-    .map((layer) => ({
-      ...layer,
-      pieces: palletPieces.filter((piece) => piece.palletLayerId === layer.id),
-    }));
-  return { ...pallet, layers };
+  return toPalletDto(pallet);
 }
 
-export function resetAllPallets() {
-  pallets = [];
-  palletLayers = [];
-  palletPieces = [];
+export async function resetAllPallets() {
+  await prisma.$transaction([
+    prisma.palletPiece.deleteMany(),
+    prisma.palletLayer.deleteMany(),
+    prisma.pallet.deleteMany(),
+  ]);
 }
 
-export function getInventorySnapshot() {
+export async function getInventorySnapshot() {
+  const [projects, shapes, pallets, palletLayers, palletPieces, shopConfigs, shops, productionRuns, perceivedStretches, feedDraws, machineConfigs] =
+    await Promise.all([
+      prisma.project.findMany(),
+      prisma.shape.findMany(),
+      prisma.pallet.findMany(),
+      prisma.palletLayer.findMany(),
+      prisma.palletPiece.findMany(),
+      prisma.shopPalletConfig.findMany(),
+      prisma.shop.findMany(),
+      prisma.productionRun.findMany(),
+      prisma.perceivedStretch.findMany(),
+      prisma.feedDraw.findMany(),
+      prisma.machineConfig.findMany(),
+    ]);
+
   return {
     projects,
     shapes,
@@ -318,7 +264,7 @@ export function getInventorySnapshot() {
     palletLayers,
     palletPieces,
     shopConfigs,
-    shopSettings,
+    shopSettings: shops.map((shop) => ({ shopId: shop.id, scrapFreeThresholdPercent: shop.scrapFreeThresholdPercent })),
     productionRuns,
     perceivedStretches,
     feedDraws,
@@ -326,37 +272,36 @@ export function getInventorySnapshot() {
   };
 }
 
-export function upsertProductionRun(run: ProductionRun): ProductionRun {
-  const existingIndex = productionRuns.findIndex((candidate) => candidate.id === run.id);
-  if (existingIndex >= 0) {
-    productionRuns[existingIndex] = run;
-    return productionRuns[existingIndex];
-  }
-  productionRuns.push(run);
-  return run;
+export async function upsertProductionRun(run: ProductionRun): Promise<ProductionRun> {
+  return prisma.productionRun.upsert({
+    where: { id: run.id },
+    update: run,
+    create: run,
+  });
 }
 
-export function getProductionRun(runId: string): ProductionRun | undefined {
-  return productionRuns.find((run) => run.id === runId);
+export async function getProductionRun(runId: string): Promise<ProductionRun | null> {
+  return prisma.productionRun.findUnique({ where: { id: runId } });
 }
 
-export function listRunsForProject(projectId: string): ProductionRun[] {
-  return productionRuns.filter((run) => run.projectId === projectId);
+export async function listRunsForProject(projectId: string): Promise<ProductionRun[]> {
+  return prisma.productionRun.findMany({ where: { projectId } });
 }
 
-export function listRunsForOperator(operatorId: string): ProductionRun[] {
-  return productionRuns.filter((run) => run.operatorId === operatorId);
+export async function listRunsForOperator(operatorId: string): Promise<ProductionRun[]> {
+  return prisma.productionRun.findMany({ where: { operatorId } });
 }
 
-export function listRunsForShop(shopId: string): ProductionRun[] {
-  return productionRuns.filter((run) => run.shopId === shopId);
+export async function listRunsForShop(shopId: string): Promise<ProductionRun[]> {
+  return prisma.productionRun.findMany({ where: { shopId } });
 }
 
-export function computeScrapFreeStats(filter: { operatorId?: string; shopId?: string }): ScrapFreeStats {
-  const scopedRuns = productionRuns.filter((run) => {
-    if (filter.operatorId && run.operatorId !== filter.operatorId) return false;
-    if (filter.shopId && run.shopId !== filter.shopId) return false;
-    return true;
+export async function computeScrapFreeStats(filter: { operatorId?: string; shopId?: string }): Promise<ScrapFreeStats> {
+  const scopedRuns = await prisma.productionRun.findMany({
+    where: {
+      ...(filter.operatorId ? { operatorId: filter.operatorId } : {}),
+      ...(filter.shopId ? { shopId: filter.shopId } : {}),
+    },
   });
 
   const totalRuns = scopedRuns.length;
@@ -370,4 +315,41 @@ export function computeScrapFreeStats(filter: { operatorId?: string; shopId?: st
     scrapFreeRuns,
     scrapFreeRatePercent,
   };
+}
+
+export async function ensureSeedData(seed: {
+  shops: { shopId: string; name: string; scrapFreeThresholdPercent: number }[];
+  shopConfigs: ShopPalletConfig[];
+  projects: Project[];
+  shapes: Shape[];
+  perceivedStretches: Omit<PerceivedStretch, 'id'>[];
+  feedDraws: Omit<FeedDraw, 'id'>[];
+  machineConfigs: Omit<MachineConfig, 'id'>[];
+  productionRuns: ProductionRun[];
+}) {
+  await prisma.$transaction([
+    prisma.productionRun.deleteMany(),
+    prisma.machineConfig.deleteMany(),
+    prisma.feedDraw.deleteMany(),
+    prisma.perceivedStretch.deleteMany(),
+    prisma.palletPiece.deleteMany(),
+    prisma.palletLayer.deleteMany(),
+    prisma.pallet.deleteMany(),
+    prisma.shape.deleteMany(),
+    prisma.project.deleteMany(),
+    prisma.shopPalletConfig.deleteMany(),
+    prisma.shop.deleteMany(),
+  ]);
+
+  await prisma.shop.createMany({
+    data: seed.shops.map((shop) => ({ id: shop.shopId, name: shop.name, scrapFreeThresholdPercent: shop.scrapFreeThresholdPercent })),
+  });
+
+  await prisma.shopPalletConfig.createMany({ data: seed.shopConfigs });
+  await prisma.project.createMany({ data: seed.projects });
+  await prisma.shape.createMany({ data: seed.shapes });
+  await prisma.perceivedStretch.createMany({ data: seed.perceivedStretches });
+  await prisma.feedDraw.createMany({ data: seed.feedDraws });
+  await prisma.machineConfig.createMany({ data: seed.machineConfigs });
+  await prisma.productionRun.createMany({ data: seed.productionRuns });
 }
