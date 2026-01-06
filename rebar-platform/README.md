@@ -27,15 +27,15 @@ This monorepo hosts applications and services for the rebar fabrication platform
 Install dependencies with npm (recommended) to take advantage of the workspace setup:
 
 ```bash
-npm install
+pnpm install
 ```
 
 Useful scripts (to be implemented by individual packages):
 
 ```bash
-npm dev:api      # Start the core API (NestJS)
-npm dev:web      # Start the web dashboard (Next.js)
-npm dev:tablet   # Start the React Native field tablet app
+pnpm dev:api      # Start the core API (NestJS)
+pnpm dev:web      # Start the web dashboard (Next.js)
+pnpm dev:tablet   # Start the React Native field tablet app
 ```
 
 ## Documentation
