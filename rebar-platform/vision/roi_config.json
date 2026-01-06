@@ -1,0 +1,11 @@
+{
+  "roi": {
+    "x": 10,
+    "y": 10,
+    "width": 100,
+    "height": 60
+  },
+  "persistence_ms": 120,
+  "min_area_px": 800,
+  "stabilization_ms": 200
+}
