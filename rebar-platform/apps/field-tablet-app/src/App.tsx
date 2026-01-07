@@ -44,7 +44,7 @@ type PalletPlan = {
   layers: PalletLayer[];
 };
 
-const CORE_API_URL = 'http://localhost:3000';
+const CORE_API_URL = 'http://localhost:3001';
 
 type ScreenState =
   | { screen: 'projectList' }
