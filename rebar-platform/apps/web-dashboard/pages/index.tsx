@@ -197,7 +197,6 @@ export default function RealityAnchorApp() {
   const [isRunning, setIsRunning] = useState(false);
   const [showAR, setShowAR] = useState(false);
   const [authRequest, setAuthRequest] = useState<null | (typeof RESET_LEVELS)[keyof typeof RESET_LEVELS]>(null);
-  const [manualInputs, setManualInputs] = useState<number[]>(() => system.anchors.map((anchor) => anchor.currentValue));
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -262,24 +261,11 @@ export default function RealityAnchorApp() {
         ...prev.journal,
       ],
     }));
-    setManualInputs(system.anchors.map(() => 0));
     setAuthRequest(null);
   };
 
-  const applyManualInputs = () => {
-    setSystem((prev) => {
-      const next = HLSFEngine.tick(prev, manualInputs);
-      return {
-        ...next,
-        history: [...prev.history, { time: next.timestamp, ...next.metrics }].slice(-50),
-        journal: [...next.events, ...prev.journal].slice(0, 50),
-      };
-    });
-  };
-
   return (
-    <div className="relative min-h-screen bg-[#0a0a0b] text-slate-100 font-sans selection:bg-blue-500/30">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_50%),radial-gradient(circle_at_center,_rgba(16,185,129,0.08),_transparent_55%)] pointer-events-none" />
+    <div className="min-h-screen bg-[#0a0a0b] text-slate-100 font-sans selection:bg-blue-500/30">
       {authRequest && (
         <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-[#121214] border border-white/10 p-8 md:p-12 rounded-[2.5rem] max-w-lg w-full shadow-2xl">
@@ -369,11 +355,10 @@ export default function RealityAnchorApp() {
         </div>
       )}
 
-      <header className="relative bg-[#121214] border-b border-white/5 px-6 py-8 md:px-12 md:py-10 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(120deg,_rgba(59,130,246,0.12),_transparent_45%),linear-gradient(300deg,_rgba(14,116,144,0.18),_transparent_55%)] opacity-70" />
-        <div className="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+      <header className="bg-[#121214] border-b border-white/5 px-6 py-8 md:px-12 md:py-10">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
           <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/20 ring-1 ring-white/10">
+            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/20">
               <Target size={32} className="text-white" />
             </div>
             <div>
@@ -388,17 +373,17 @@ export default function RealityAnchorApp() {
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-3 w-full md:w-auto relative z-10">
+          <div className="flex flex-wrap gap-3 w-full md:w-auto">
             <button
               onClick={() => setShowAR(true)}
-              className="flex-1 md:flex-none flex items-center justify-center gap-3 px-6 py-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all font-bold text-[11px] uppercase tracking-widest shadow-[0_0_20px_rgba(59,130,246,0.12)]"
+              className="flex-1 md:flex-none flex items-center justify-center gap-3 px-6 py-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-all font-bold text-[11px] uppercase tracking-widest"
             >
               <Camera size={18} className="text-blue-400" /> Lens
             </button>
             <button
               onClick={() => setIsRunning(!isRunning)}
               disabled={system.isIrreversible}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(59,130,246,0.15)] ${
+              className={`flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all ${
                 system.isIrreversible
                   ? 'bg-red-500/10 text-red-500 border border-red-500/20'
                   : isRunning
@@ -419,85 +404,16 @@ export default function RealityAnchorApp() {
         </div>
       </header>
 
-      <main className="relative max-w-7xl mx-auto p-6 md:p-12">
+      <main className="max-w-7xl mx-auto p-6 md:p-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           <div className="lg:col-span-4 space-y-8">
-            <section className="bg-[#0f1012] border border-white/10 p-6 rounded-[2rem] shadow-[0_25px_60px_-40px_rgba(59,130,246,0.6)]">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                    <Wrench size={14} className="text-blue-500" /> Operator Input Deck
-                  </div>
-                  <div className="text-sm font-semibold text-white mt-2">Tune anchor vectors in real time.</div>
-                </div>
-                <button
-                  onClick={() => setManualInputs(system.anchors.map((anchor) => anchor.currentValue))}
-                  className="text-[9px] uppercase tracking-[0.3em] text-slate-500 hover:text-slate-200 transition-colors"
-                >
-                  Sync
-                </button>
-              </div>
-              <div className="space-y-5">
-                {system.anchors.map((anchor, index) => {
-                  const maxValue = anchor.thresholds.fail * 1.2;
-                  return (
-                    <div key={anchor.id} className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{anchor.id}</div>
-                        <div className="text-[10px] font-mono text-slate-500">{anchor.subsystem === SUBSYSTEMS.KINETIC.id ? 'Kinetic' : 'Thermal'}</div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="range"
-                          min={0}
-                          max={maxValue}
-                          step={anchor.subsystem === SUBSYSTEMS.ENVIRONMENTAL.id ? 0.1 : 0.01}
-                          value={manualInputs[index] ?? 0}
-                          onChange={(event) => {
-                            const value = Number(event.target.value);
-                            setManualInputs((prev) => prev.map((entry, i) => (i === index ? value : entry)));
-                          }}
-                          className="w-full accent-blue-500"
-                        />
-                        <input
-                          type="number"
-                          min={0}
-                          max={maxValue}
-                          step={anchor.subsystem === SUBSYSTEMS.ENVIRONMENTAL.id ? 0.1 : 0.01}
-                          value={manualInputs[index] ?? 0}
-                          onChange={(event) => {
-                            const value = Number(event.target.value);
-                            setManualInputs((prev) => prev.map((entry, i) => (i === index ? value : entry)));
-                          }}
-                          className="w-24 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <button
-                  onClick={applyManualInputs}
-                  className="py-3 rounded-xl bg-blue-600 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-blue-500 transition-all"
-                >
-                  Apply Inputs
-                </button>
-                <button
-                  onClick={() => setManualInputs(system.anchors.map(() => 0))}
-                  className="py-3 rounded-xl bg-white/5 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all"
-                >
-                  Zero Load
-                </button>
-              </div>
-            </section>
             <div className="grid grid-cols-1 gap-4">
               {[
                 { label: 'Safety Margin', val: system.metrics.margin, color: 'text-emerald-500', icon: Scale },
                 { label: 'System Fatigue', val: system.metrics.fatigue, color: 'text-amber-500', icon: Zap },
                 { label: 'Network Trust', val: system.metrics.confidence, color: 'text-blue-500', icon: Cpu },
               ].map((metric) => (
-                <div key={metric.label} className="bg-[#121214] border border-white/5 p-6 rounded-3xl relative overflow-hidden group shadow-[0_20px_50px_-40px_rgba(15,23,42,0.8)]">
+                <div key={metric.label} className="bg-[#121214] border border-white/5 p-6 rounded-3xl relative overflow-hidden group">
                   <metric.icon className={`absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-all ${metric.color}`} size={80} />
                   <div className="text-[10px] text-slate-500 font-bold uppercase mb-2 tracking-widest">{metric.label}</div>
                   <div className={`text-4xl font-bold tracking-tight tabular-nums ${metric.color}`}>
