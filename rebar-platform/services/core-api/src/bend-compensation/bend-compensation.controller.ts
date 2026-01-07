@@ -24,47 +24,47 @@ export class BendCompensationController {
   constructor(private readonly bending: BendCompensationService) {}
 
   @Post('bend-compensation/compute')
-  compute(@Body() body: ComputeBendSetpointsDto): BendSetpoints {
+  compute(@Body() body: ComputeBendSetpointsDto): Promise<BendSetpoints> {
     return this.bending.computeBendSetpoints(body);
   }
 
   @Get('admin/perceived-stretch')
-  listPerceivedStretch(): PerceivedStretch[] {
+  listPerceivedStretch(): Promise<PerceivedStretch[]> {
     return this.bending.listPerceivedStretch();
   }
 
   @Post('admin/perceived-stretch')
-  addPerceivedStretch(@Body() body: CreatePerceivedStretchDto): PerceivedStretch {
+  addPerceivedStretch(@Body() body: CreatePerceivedStretchDto): Promise<PerceivedStretch> {
     return this.bending.addPerceivedStretch(body);
   }
 
   @Patch('admin/perceived-stretch/:id')
-  updatePerceivedStretch(@Param('id') id: string, @Body() body: UpdatePerceivedStretchDto): PerceivedStretch {
+  updatePerceivedStretch(@Param('id') id: string, @Body() body: UpdatePerceivedStretchDto): Promise<PerceivedStretch> {
     return this.bending.updatePerceivedStretch(id, body);
   }
 
   @Get('admin/feed-draw')
-  listFeedDraw(): FeedDraw[] {
+  listFeedDraw(): Promise<FeedDraw[]> {
     return this.bending.listFeedDraws();
   }
 
   @Post('admin/feed-draw')
-  addFeedDraw(@Body() body: CreateFeedDrawDto): FeedDraw {
+  addFeedDraw(@Body() body: CreateFeedDrawDto): Promise<FeedDraw> {
     return this.bending.addFeedDraw(body);
   }
 
   @Patch('admin/feed-draw/:id')
-  updateFeedDraw(@Param('id') id: string, @Body() body: UpdateFeedDrawDto): FeedDraw {
+  updateFeedDraw(@Param('id') id: string, @Body() body: UpdateFeedDrawDto): Promise<FeedDraw> {
     return this.bending.updateFeedDraw(id, body);
   }
 
   @Get('admin/machines/:machineId/config')
-  getMachineConfig(@Param('machineId') machineId: string): MachineConfig {
+  getMachineConfig(@Param('machineId') machineId: string): Promise<MachineConfig> {
     return this.bending.getMachineConfig(machineId);
   }
 
   @Patch('admin/machines/:machineId/config')
-  updateMachineConfig(@Param('machineId') machineId: string, @Body() body: UpdateMachineConfigDto): MachineConfig {
+  updateMachineConfig(@Param('machineId') machineId: string, @Body() body: UpdateMachineConfigDto): Promise<MachineConfig> {
     return this.bending.updateMachineConfig(machineId, body);
   }
 }

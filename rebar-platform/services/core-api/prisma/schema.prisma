@@ -7,10 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PalletStatus {
+  planned
+  stacking
+  stacked
+  loaded
+}
+
 model User {
   id    String @id @default(cuid())
   email String @unique
   role  String
+  shop  Shop? @relation(fields: [shopId], references: [id])
+  shopId String?
 }
 
 model Shop {
@@ -19,6 +28,18 @@ model Shop {
   users User[]
   scrapFreeThresholdPercent Float @default(2.0)
   productionRuns ProductionRun[]
+  projects Project[]
+  palletConfig ShopPalletConfig?
+  leads Lead[]
+}
+
+model ShopPalletConfig {
+  shopId String @id
+  defaultMaxPalletWeightLbs Float
+  palletLengthIn Float
+  palletWidthIn Float
+  allowOverhangIn Float
+  shop    Shop   @relation(fields: [shopId], references: [id])
 }
 
 model Project {
@@ -28,6 +49,8 @@ model Project {
   shopId  String
   productionRuns ProductionRun[]
   jobsheets JobSheet[]
+  shapes   Shape[]
+  pallets  Pallet[]
 }
 
 model JobSheet {
@@ -43,13 +66,21 @@ model JobSheet {
 
 model Shape {
   id                String   @id @default(cuid())
-  jobSheetId        String
+  projectId         String
+  label             String
   barSize           String
-  targetDimensions  String
-  bendAngles        String
+  finalLengthInches Float
   quantity          Int
-  normalizedUnits   String
-  jobSheet          JobSheet @relation(fields: [jobSheetId], references: [id])
+  maxLengthInches   Float?
+  shapeType         String?
+  // TODO: confirm whether shapes must remain linked to jobsheets; made optional until requirements are clarified.
+  jobSheetId        String?
+  project           Project @relation(fields: [projectId], references: [id])
+  jobSheet          JobSheet? @relation(fields: [jobSheetId], references: [id])
+  palletPieces      PalletPiece[]
+  bendPlans BendPlan[]
+  cutRuns   CutRun[]
+  bendRuns  BendRun[]
 }
 
 model BendRule {
@@ -100,6 +131,44 @@ model BendRun {
   shape         Shape @relation(fields: [shapeId], references: [id])
 }
 
+model Pallet {
+  id           String @id @default(cuid())
+  projectId    String
+  name         String
+  maxWeightLbs Float
+  totalWeightLbs Float
+  status       PalletStatus
+  overhangWarning Boolean? @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  project      Project @relation(fields: [projectId], references: [id])
+  layers       PalletLayer[]
+}
+
+model PalletLayer {
+  id           String @id @default(cuid())
+  palletId     String
+  layerIndex   Int
+  weightLbs    Float
+  notes        String?
+  maxLengthInches Float?
+  overhangWarning Boolean? @default(false)
+  pallet       Pallet @relation(fields: [palletId], references: [id])
+  pieces       PalletPiece[]
+}
+
+model PalletPiece {
+  id              String @id @default(cuid())
+  palletLayerId   String
+  shapeId         String
+  quantity        Int
+  weightPerPieceLbs Float
+  totalWeightLbs  Float
+  shapeLabel      String?
+  layer           PalletLayer @relation(fields: [palletLayerId], references: [id])
+  shape           Shape @relation(fields: [shapeId], references: [id])
+}
+
 model ProductionRun {
   id           String   @id @default(cuid())
   projectId    String
@@ -113,6 +182,33 @@ model ProductionRun {
   closedAt     DateTime @default(now())
   project      Project @relation(fields: [projectId], references: [id])
   shop         Shop    @relation(fields: [shopId], references: [id])
+}
+
+model PerceivedStretch {
+  id       String @id @default(cuid())
+  barSize  String
+  angleDeg Float
+  offsetIn Float
+  isDefault Boolean @default(false)
+}
+
+model FeedDraw {
+  id       String @id @default(cuid())
+  barSize  String
+  angleDeg Float
+  drawIn   Float
+  isDefault Boolean @default(false)
+  isProvisional Boolean @default(false)
+}
+
+model MachineConfig {
+  id       String @id @default(cuid())
+  machineId String @unique
+  mode     String
+  offset4BarIn Float
+  offset5BarIn Float
+  offset6BarIn Float
+  globalConfigOffsetIn Float
 }
 
 model ScrapRecord {
@@ -153,6 +249,8 @@ model Lead {
   workflowType   String?
   scrapPainLevel String?
   leadScore      Int?
+  shopId         String?
+  shop           Shop? @relation(fields: [shopId], references: [id])
   deals          Deal[]
 }
 
