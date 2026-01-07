@@ -4,14 +4,15 @@
   "private": true,
   "packageManager": "pnpm@8.15.8",
   "scripts": {
-    "dev:api": "pnpm --filter services/core-api dev",
-    "dev:web": "pnpm --filter apps/web-dashboard dev",
-    "dev:tablet": "pnpm --filter apps/field-tablet-app start",
-    "dev:voice-agent": "pnpm --filter apps/voice-sales-agent-api start",
+    "dev:api": "pnpm --filter core-api dev",
+    "dev:web": "pnpm --filter web-dashboard dev",
+    "dev:tablet": "pnpm --filter field-tablet-app start",
+    "dev:voice-agent": "pnpm --filter voice-sales-agent-api start",
+    "dev:workspace-check": "pnpm list -r --depth -1",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
-    "prisma:generate": "pnpm --filter services/core-api prisma generate",
-    "prisma:migrate": "pnpm --filter services/core-api prisma migrate dev"
+    "prisma:generate": "pnpm --filter core-api prisma generate",
+    "prisma:migrate": "pnpm --filter core-api prisma migrate dev"
   },
   "workspaces": [
     "apps/*",
