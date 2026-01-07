@@ -52,6 +52,10 @@ export async function getProject(projectId: string): Promise<Project | null> {
   return prisma.project.findUnique({ where: { id: projectId } });
 }
 
+export async function listProjects(): Promise<Project[]> {
+  return prisma.project.findMany({ orderBy: { name: 'asc' } });
+}
+
 export async function getShopConfigForProject(projectId: string): Promise<ShopPalletConfig | undefined> {
   const project = await prisma.project.findUnique({
     where: { id: projectId },

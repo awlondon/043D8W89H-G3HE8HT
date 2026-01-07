@@ -1,14 +1,20 @@
-import { PalletPlannerService, checkLengthMismatch } from '../src/pallets/pallet-planner.service';
-import { getInventorySnapshot, resetAllPallets } from '../src/data/data-store';
+import { PalletPlannerService } from '../src/pallets/pallet-planner.service';
+import { checkLengthMismatch } from '../src/pallets/pallet-algorithm';
+import { ensureSeedData, getInventorySnapshot, resetAllPallets } from '../src/data/data-store';
+import { seedData } from '../src/data/seed-data';
 
 describe('PalletPlannerService', () => {
-  beforeEach(() => {
-    resetAllPallets();
+  beforeAll(async () => {
+    await ensureSeedData(seedData);
   });
 
-  it('keeps pallets under the configured weight limit and persists records', () => {
+  beforeEach(async () => {
+    await resetAllPallets();
+  });
+
+  it('keeps pallets under the configured weight limit and persists records', async () => {
     const service = new PalletPlannerService();
-    const plan = service.generatePlan({ projectId: 'project-1', maxPalletWeightLbs: 900 });
+    const plan = await service.generatePlan({ projectId: 'project-1', maxPalletWeightLbs: 900 });
 
     expect(plan.length).toBeGreaterThan(0);
     plan.forEach((pallet) => {
@@ -17,23 +23,23 @@ describe('PalletPlannerService', () => {
       expect(Math.round(totalLayerWeight)).toBe(Math.round(pallet.totalWeightLbs));
     });
 
-    const snapshot = getInventorySnapshot();
+    const snapshot = await getInventorySnapshot();
     expect(snapshot.pallets.length).toBe(plan.length);
     expect(snapshot.palletLayers.length).toBeGreaterThan(0);
     expect(snapshot.palletPieces.length).toBeGreaterThan(0);
   });
 
-  it('allows all shapes to live on a single pallet when the ceiling is high enough', () => {
+  it('allows all shapes to live on a single pallet when the ceiling is high enough', async () => {
     const service = new PalletPlannerService();
-    const plan = service.generatePlan({ projectId: 'project-1', maxPalletWeightLbs: 20000 });
+    const plan = await service.generatePlan({ projectId: 'project-1', maxPalletWeightLbs: 20000 });
 
     expect(plan.length).toBe(1);
     expect(plan[0].layers.length).toBeGreaterThan(0);
   });
 
-  it('splits many shapes into multiple pallets when the ceiling is low', () => {
+  it('splits many shapes into multiple pallets when the ceiling is low', async () => {
     const service = new PalletPlannerService();
-    const plan = service.generatePlan({ projectId: 'project-1', maxPalletWeightLbs: 500 });
+    const plan = await service.generatePlan({ projectId: 'project-1', maxPalletWeightLbs: 500 });
 
     expect(plan.length).toBeGreaterThan(1);
     const nearLimit = plan.some((pallet) => pallet.totalWeightLbs > 0.9 * pallet.maxWeightLbs);

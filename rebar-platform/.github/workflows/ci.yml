@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rebar_platform
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rebar_platform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8.15.8
+      - name: Install dependencies
+        run: pnpm install
+      - name: Prisma generate
+        run: pnpm prisma:generate
+      - name: Prisma migrate
+        run: pnpm prisma:migrate
+      - name: Lint
+        run: pnpm lint
+      - name: Test
+        run: pnpm test
