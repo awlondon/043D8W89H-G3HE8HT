@@ -113,7 +113,7 @@ export class PalletPlannerService {
     let current: WorkingPallet | undefined;
     let layerSequence: number[] = [];
 
-    items.forEach((item) => {
+    for (const item of items) {
       for (let i = 0; i < item.shape.quantity; i += 1) {
         const pieceWeight = item.weightPerPieceLbs;
         if (!current) {
@@ -148,7 +148,7 @@ export class PalletPlannerService {
           layer.overhangWarning = true;
         }
       }
-    });
+    }
 
     if (current && current.layers.some((layer) => layer.pieces.length > 0)) {
       created.push(await this.persistWorkingPallet(current));
