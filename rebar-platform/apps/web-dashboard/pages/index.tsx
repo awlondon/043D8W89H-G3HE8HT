@@ -43,7 +43,7 @@ type ProductionRun = {
   closedAt: string;
 };
 
-const CORE_API_BASE_URL = process.env.NEXT_PUBLIC_CORE_API_URL ?? 'http://localhost:3000';
+const CORE_API_BASE_URL = process.env.NEXT_PUBLIC_CORE_API_URL ?? 'http://localhost:3001';
 
 export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
