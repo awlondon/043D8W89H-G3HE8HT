@@ -38,6 +38,10 @@ pnpm --filter web-dashboard dev  # Start the web dashboard (Next.js)
 pnpm dev:tablet                  # Start the React Native field tablet app
 ```
 
+pnpm workspace filters
+
+This monorepo uses pnpm --filter with package names, not directory paths. If a command reports “No projects matched the filters”, verify that the filter matches the "name" field in the target package’s package.json.
+
 ## Documentation
 
 - [Cutter App Spec](docs/product/cutter_app_spec.md)
