@@ -185,6 +185,14 @@ class DialogueManager {
   }
 }
 
+@Controller('health')
+class HealthController {
+  @Get()
+  getHealth() {
+    return { status: 'ok' };
+  }
+}
+
 @Controller('session')
 class SessionController {
   constructor(private readonly manager: DialogueManager, private readonly registry: SessionRegistry) {}
@@ -218,7 +226,7 @@ class SessionController {
 }
 
 @Module({
-  controllers: [SessionController],
+  controllers: [SessionController, HealthController],
   providers: [SessionRegistry, DialogueManager],
 })
 class VoiceAgentModule {}

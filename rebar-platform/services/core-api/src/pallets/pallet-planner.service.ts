@@ -6,15 +6,7 @@
  */
 import { Injectable } from '@nestjs/common';
 import { computePieceWeightLbs } from '../common/rebar-weight';
-import {
-  Pallet,
-  PalletLayer,
-  PalletPiece,
-  PalletPlanningInput,
-  PalletStatus,
-  PlannedPalletDto,
-  Shape,
-} from '../data/models';
+import { Pallet, PalletPlanningInput, PalletStatus, PlannedPalletDto, Shape } from '../data/models';
 import {
   clearPalletsForProject,
   createLayer,
@@ -27,26 +19,7 @@ import {
   listPalletsForProject,
   updatePalletStatus,
 } from '../data/data-store';
-
-interface PlanningItem {
-  shape: Shape;
-  weightPerPieceLbs: number;
-  maxLengthInches: number;
-}
-
-interface WorkingLayer extends Omit<PalletLayer, 'id' | 'palletId'> {
-  pieces: PalletPiece[];
-}
-
-interface WorkingPallet extends Omit<Pallet, 'id' | 'createdAt' | 'updatedAt'> {
-  layers: WorkingLayer[];
-}
-
-export function checkLengthMismatch(layer: WorkingLayer, item: PlanningItem) {
-  if (!layer.maxLengthInches) return false;
-  const ratio = item.maxLengthInches / layer.maxLengthInches;
-  return ratio < 0.6;
-}
+import { AlgorithmPallet, buildPalletPlan, PlanningItem } from './pallet-algorithm';
 
 @Injectable()
 export class PalletPlannerService {
@@ -71,8 +44,17 @@ export class PalletPlannerService {
     await clearPalletsForProject(project.id);
 
     const items = this.buildPlanningItems(shapes);
-    const pallets = await this.buildPallets(items, maxWeight, palletLengthIn, allowOverhangIn, project.id);
-    return Promise.all(pallets.map((pallet) => getPalletWithLayers(pallet.id) as Promise<PlannedPalletDto>));
+    const { pallets, nextPalletIndex } = buildPalletPlan({
+      items,
+      maxWeight,
+      palletLengthIn,
+      allowOverhangIn,
+      startingPalletIndex: this.palletCounter,
+    });
+    this.palletCounter = nextPalletIndex;
+
+    const persisted = await Promise.all(pallets.map((pallet) => this.persistWorkingPallet(pallet, project.id)));
+    return Promise.all(persisted.map((pallet) => getPalletWithLayers(pallet.id) as Promise<PlannedPalletDto>));
   }
 
   listProjectPlans(projectId: string) {
@@ -102,116 +84,21 @@ export class PalletPlannerService {
       });
   }
 
-  private async buildPallets(
-    items: PlanningItem[],
-    maxWeight: number,
-    palletLengthIn: number,
-    allowOverhangIn: number,
-    projectId: string,
-  ) {
-    const created: Pallet[] = [];
-    let current: WorkingPallet | undefined;
-    let layerSequence: number[] = [];
-
-    for (const item of items) {
-      for (let i = 0; i < item.shape.quantity; i += 1) {
-        const pieceWeight = item.weightPerPieceLbs;
-        if (!current) {
-          current = this.newWorkingPallet(projectId, maxWeight);
-          layerSequence = [1];
-        }
-
-        const willExceed = current.totalWeightLbs + pieceWeight > maxWeight;
-        if (willExceed) {
-          created.push(await this.persistWorkingPallet(current));
-          current = this.newWorkingPallet(projectId, maxWeight);
-          layerSequence = [1];
-        }
-
-        const layerLimit = maxWeight * 0.4;
-        let layer = current.layers[current.layers.length - 1];
-        const mismatch = checkLengthMismatch(layer, item);
-        if (layer.weightLbs + pieceWeight > layerLimit || mismatch) {
-          const nextIndex = (layerSequence[layerSequence.length - 1] || 0) + 1;
-          layerSequence.push(nextIndex);
-          layer = this.newLayer(nextIndex);
-          current.layers.push(layer);
-        }
-
-        this.addPieceToLayer(layer, item.shape, pieceWeight);
-        layer.maxLengthInches = Math.max(layer.maxLengthInches ?? 0, item.maxLengthInches);
-        current.totalWeightLbs += pieceWeight;
-
-        const maxAllowedLength = palletLengthIn + allowOverhangIn;
-        if (item.maxLengthInches > maxAllowedLength) {
-          current.overhangWarning = true;
-          layer.overhangWarning = true;
-        }
-      }
-    }
-
-    if (current && current.layers.some((layer) => layer.pieces.length > 0)) {
-      created.push(await this.persistWorkingPallet(current));
-    }
-
-    return created;
-  }
-
-  private newWorkingPallet(projectId: string, maxWeightLbs: number): WorkingPallet {
-    return {
-      projectId,
-      name: `Pallet ${this.palletCounter++}`,
-      maxWeightLbs,
-      totalWeightLbs: 0,
-      status: 'planned',
-      layers: [this.newLayer(1)],
-      overhangWarning: false,
-    };
-  }
-
-  private newLayer(layerIndex: number): WorkingLayer {
-    return {
-      layerIndex,
-      weightLbs: 0,
-      notes: undefined,
-      maxLengthInches: undefined,
-      pieces: [],
-      overhangWarning: false,
-    };
-  }
-
-  private addPieceToLayer(layer: WorkingLayer, shape: Shape, weightPerPieceLbs: number) {
-    const existing = layer.pieces.find((piece) => piece.shapeId === shape.id);
-    if (existing) {
-      existing.quantity += 1;
-      existing.totalWeightLbs += weightPerPieceLbs;
-      layer.weightLbs += weightPerPieceLbs;
-      return;
-    }
-
-    layer.pieces.push({
-      id: 'pending',
-      palletLayerId: 'pending',
-      shapeId: shape.id,
-      shapeLabel: shape.label,
-      quantity: 1,
-      weightPerPieceLbs,
-      totalWeightLbs: weightPerPieceLbs,
-    });
-    layer.weightLbs += weightPerPieceLbs;
-  }
-
-  private async persistWorkingPallet(pallet: WorkingPallet): Promise<Pallet> {
+  private async persistWorkingPallet(pallet: AlgorithmPallet, projectId: string): Promise<Pallet> {
     const created = await createPallet({
-      ...pallet,
+      projectId,
       name: pallet.name,
+      maxWeightLbs: pallet.maxWeightLbs,
+      totalWeightLbs: pallet.totalWeightLbs,
+      status: pallet.status,
+      overhangWarning: pallet.overhangWarning,
     });
 
     for (const layer of pallet.layers) {
       const createdLayer = await createLayer({
         palletId: created.id,
         layerIndex: layer.layerIndex,
-        weightLbs: layer.pieces.reduce((sum, piece) => sum + piece.totalWeightLbs, 0),
+        weightLbs: layer.weightLbs,
         notes: layer.notes,
         maxLengthInches: layer.maxLengthInches,
         overhangWarning: layer.overhangWarning,

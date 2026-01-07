@@ -5,6 +5,11 @@ from pydantic import BaseModel, Field
 app = FastAPI(title="Optimization Service")
 
 
+@app.get("/health")
+async def health_check() -> Dict[str, str]:
+    return {"status": "ok"}
+
+
 class RequiredPiece(BaseModel):
     barSize: str = Field(..., description="Rebar bar size such as #5")
     length: float = Field(..., gt=0, description="Cut length in inches")

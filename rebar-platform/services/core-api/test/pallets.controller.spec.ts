@@ -1,27 +1,34 @@
 import { PalletPlannerService } from '../src/pallets/pallet-planner.service';
 import { PalletsController } from '../src/pallets/pallets.controller';
-import { resetAllPallets } from '../src/data/data-store';
+import { ensureSeedData, resetAllPallets } from '../src/data/data-store';
+import { seedData } from '../src/data/seed-data';
 
 describe('PalletsController', () => {
-  beforeEach(() => resetAllPallets());
-
-  it('creates and retrieves pallet plans for a project', () => {
-    const controller = new PalletsController(new PalletPlannerService());
-    const created = controller.generatePalletPlan('project-1', {});
-    expect(created.length).toBeGreaterThan(0);
-
-    const listed = controller.listPlans('project-1');
-    expect(listed.length).toBe(created.length);
-
-    const first = controller.getPallet(created[0].id);
-    expect(first.layers.length).toBeGreaterThan(0);
+  beforeAll(async () => {
+    await ensureSeedData(seedData);
   });
 
-  it('updates pallet status', () => {
-    const controller = new PalletsController(new PalletPlannerService());
-    const [pallet] = controller.generatePalletPlan('project-1', {});
+  beforeEach(async () => {
+    await resetAllPallets();
+  });
 
-    const updated = controller.updateStatus(pallet.id, { status: 'stacked' });
-    expect(updated.status).toBe('stacked');
+  it('creates and retrieves pallet plans for a project', async () => {
+    const controller = new PalletsController(new PalletPlannerService());
+    const created = await controller.generatePalletPlan('project-1', {});
+    expect(created.length).toBeGreaterThan(0);
+
+    const listed = await controller.listPlans('project-1');
+    expect(listed.length).toBe(created.length);
+
+    const first = await controller.getPallet(created[0].id);
+    expect(first?.layers.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it('updates pallet status', async () => {
+    const controller = new PalletsController(new PalletPlannerService());
+    const [pallet] = await controller.generatePalletPlan('project-1', {});
+
+    const updated = await controller.updateStatus(pallet.id, { status: 'stacked' });
+    expect(updated?.status).toBe('stacked');
   });
 });
