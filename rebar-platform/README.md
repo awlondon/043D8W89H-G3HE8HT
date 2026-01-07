@@ -24,7 +24,7 @@ This monorepo hosts applications and services for the rebar fabrication platform
 
 ## Getting Started
 
-Install dependencies with npm (recommended) to take advantage of the workspace setup:
+Install dependencies with pnpm (recommended) to take advantage of the workspace setup:
 
 ```bash
 pnpm install
