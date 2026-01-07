@@ -9,6 +9,11 @@ import {
   PlannedPalletDto,
   ProductionRun,
   Project,
+  RebarInventory,
+  CutRequest,
+  Job,
+  Bar,
+  CutPlan,
   ScrapFreeStats,
   Shape,
   ShopPalletConfig,
@@ -246,7 +251,24 @@ export async function resetAllPallets() {
 }
 
 export async function getInventorySnapshot() {
-  const [projects, shapes, pallets, palletLayers, palletPieces, shopConfigs, shops, productionRuns, perceivedStretches, feedDraws, machineConfigs] =
+  const [
+    projects,
+    shapes,
+    pallets,
+    palletLayers,
+    palletPieces,
+    shopConfigs,
+    shops,
+    productionRuns,
+    perceivedStretches,
+    feedDraws,
+    machineConfigs,
+    inventory,
+    cutRequests,
+    jobs,
+    bars,
+    cutPlans,
+  ] =
     await Promise.all([
       prisma.project.findMany(),
       prisma.shape.findMany(),
@@ -259,6 +281,11 @@ export async function getInventorySnapshot() {
       prisma.perceivedStretch.findMany(),
       prisma.feedDraw.findMany(),
       prisma.machineConfig.findMany(),
+      prisma.rebarInventory.findMany(),
+      prisma.cutRequest.findMany(),
+      prisma.job.findMany(),
+      prisma.bar.findMany(),
+      prisma.cutPlan.findMany(),
     ]);
 
   return {
@@ -273,6 +300,11 @@ export async function getInventorySnapshot() {
     perceivedStretches,
     feedDraws,
     machineConfigs,
+    inventory,
+    cutRequests,
+    jobs,
+    bars,
+    cutPlans,
   };
 }
 
@@ -326,12 +358,22 @@ export async function ensureSeedData(seed: {
   shopConfigs: ShopPalletConfig[];
   projects: Project[];
   shapes: Shape[];
+  inventory: RebarInventory[];
+  cutRequests: CutRequest[];
+  jobs: Job[];
+  bars: Bar[];
+  cutPlans: CutPlan[];
   perceivedStretches: Omit<PerceivedStretch, 'id'>[];
   feedDraws: Omit<FeedDraw, 'id'>[];
   machineConfigs: Omit<MachineConfig, 'id'>[];
   productionRuns: ProductionRun[];
 }) {
   await prisma.$transaction([
+    prisma.cutPlan.deleteMany(),
+    prisma.cutRequest.deleteMany(),
+    prisma.bar.deleteMany(),
+    prisma.job.deleteMany(),
+    prisma.rebarInventory.deleteMany(),
     prisma.productionRun.deleteMany(),
     prisma.machineConfig.deleteMany(),
     prisma.feedDraw.deleteMany(),
@@ -352,6 +394,16 @@ export async function ensureSeedData(seed: {
   await prisma.shopPalletConfig.createMany({ data: seed.shopConfigs });
   await prisma.project.createMany({ data: seed.projects });
   await prisma.shape.createMany({ data: seed.shapes });
+  await prisma.rebarInventory.createMany({ data: seed.inventory });
+  await prisma.job.createMany({ data: seed.jobs });
+  await prisma.bar.createMany({
+    data: seed.bars.map((bar) => ({
+      ...bar,
+      bendAngles: bar.bendAngles,
+    })),
+  });
+  await prisma.cutPlan.createMany({ data: seed.cutPlans });
+  await prisma.cutRequest.createMany({ data: seed.cutRequests });
   await prisma.perceivedStretch.createMany({ data: seed.perceivedStretches });
   await prisma.feedDraw.createMany({ data: seed.feedDraws });
   await prisma.machineConfig.createMany({ data: seed.machineConfigs });

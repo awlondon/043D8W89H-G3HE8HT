@@ -93,14 +93,14 @@ model BendRule {
 }
 
 model CutPlan {
-  id           String   @id @default(cuid())
-  jobSheetId   String
-  shapeId      String
-  stockLength  Float
-  cutLengths   String
-  scrapPieces  String
-  generatedBy  String
-  jobSheet     JobSheet @relation(fields: [jobSheetId], references: [id])
+  id        String @id @default(cuid())
+  barId     String
+  nextBarId String?
+  bar       Bar    @relation("BarCutPlans", fields: [barId], references: [id])
+  nextBar   Bar?   @relation("NextBarCutPlan", fields: [nextBarId], references: [id])
+
+  @@index([barId])
+  @@index([nextBarId])
 }
 
 model BendPlan {
@@ -288,4 +288,59 @@ model MarketingFundLedger {
   amount      Float
   description String
   timestamp   DateTime @default(now())
+}
+
+model RebarInventory {
+  id                String @id @default(cuid())
+  barDiameter       String
+  barLength         Float
+  quantityAvailable Int
+  notes             String?
+  cutRequests       CutRequest[]
+}
+
+model CutRequest {
+  id             String @id @default(cuid())
+  requestedLength Float
+  diameter       String
+  quantity       Int
+  status         String @default("Pending")
+  inventoryBarId String
+  inventoryCheck Boolean @default(false)
+  totalCutLength Float   @default(0)
+  inventoryBar   RebarInventory @relation(fields: [inventoryBarId], references: [id])
+
+  @@index([status])
+  @@index([inventoryBarId])
+}
+
+model Job {
+  id         String @id @default(cuid())
+  jobName    String
+  priority   Int
+  status     String
+  totalBars  Int   @default(0)
+  totalScrap Float @default(0)
+  bars       Bar[]
+
+  @@index([status])
+}
+
+model Bar {
+  id              String @id @default(cuid())
+  jobId           String
+  diameter        String
+  length          Float
+  bends           Int
+  bendAngles      Json
+  stretchAllowance Float
+  cutLength       Float
+  remainingLength Float
+  scrapFlag       Boolean @default(false)
+  operatorPrompt  String?
+  job             Job    @relation(fields: [jobId], references: [id])
+  cutPlans        CutPlan[] @relation("BarCutPlans")
+
+  @@index([jobId])
+  @@index([remainingLength])
 }

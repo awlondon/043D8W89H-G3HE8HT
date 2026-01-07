@@ -1,10 +1,28 @@
-import { MachineConfig, PerceivedStretch, FeedDraw, Project, Shape, ProductionRun, ShopPalletConfig } from './models';
+import {
+  Bar,
+  CutPlan,
+  CutRequest,
+  Job,
+  MachineConfig,
+  PerceivedStretch,
+  FeedDraw,
+  Project,
+  RebarInventory,
+  Shape,
+  ProductionRun,
+  ShopPalletConfig,
+} from './models';
 
 export const seedData: {
   shops: { shopId: string; name: string; scrapFreeThresholdPercent: number }[];
   shopConfigs: ShopPalletConfig[];
   projects: Project[];
   shapes: Shape[];
+  inventory: RebarInventory[];
+  cutRequests: CutRequest[];
+  jobs: Job[];
+  bars: Bar[];
+  cutPlans: CutPlan[];
   perceivedStretches: Omit<PerceivedStretch, 'id'>[];
   feedDraws: Omit<FeedDraw, 'id'>[];
   machineConfigs: Omit<MachineConfig, 'id'>[];
@@ -54,6 +72,94 @@ export const seedData: {
       maxLengthInches: 72,
       shapeType: 'hook',
       jobSheetId: null,
+    },
+  ],
+  inventory: [
+    {
+      id: 'inv-1',
+      barDiameter: '#4',
+      barLength: 240,
+      quantityAvailable: 40,
+      notes: 'Mill delivery batch A',
+    },
+    {
+      id: 'inv-2',
+      barDiameter: '#5',
+      barLength: 360,
+      quantityAvailable: 20,
+      notes: 'Priority stock for Job Alpha',
+    },
+  ],
+  cutRequests: [
+    {
+      id: 'cut-req-1',
+      requestedLength: 96,
+      diameter: '#4',
+      quantity: 10,
+      status: 'Pending',
+      inventoryBarId: 'inv-1',
+      inventoryCheck: true,
+      totalCutLength: 960,
+    },
+    {
+      id: 'cut-req-2',
+      requestedLength: 120,
+      diameter: '#5',
+      quantity: 5,
+      status: 'Pending',
+      inventoryBarId: 'inv-2',
+      inventoryCheck: false,
+      totalCutLength: 600,
+    },
+  ],
+  jobs: [
+    {
+      id: 'job-1',
+      jobName: 'Pier Reinforcement Phase 1',
+      priority: 1,
+      status: 'Planned',
+      totalBars: 2,
+      totalScrap: 8,
+    },
+  ],
+  bars: [
+    {
+      id: 'bar-1',
+      jobId: 'job-1',
+      diameter: '#4',
+      length: 240,
+      bends: 2,
+      bendAngles: [90, 90],
+      stretchAllowance: 3,
+      cutLength: 200,
+      remainingLength: 40,
+      scrapFlag: false,
+      operatorPrompt: 'Bar-1: Bend 90° twice',
+    },
+    {
+      id: 'bar-2',
+      jobId: 'job-1',
+      diameter: '#4',
+      length: 240,
+      bends: 1,
+      bendAngles: [135],
+      stretchAllowance: 0,
+      cutLength: 232,
+      remainingLength: 8,
+      scrapFlag: true,
+      operatorPrompt: 'Bar-2: Finish with 135° bend',
+    },
+  ],
+  cutPlans: [
+    {
+      id: 'cut-plan-1',
+      barId: 'bar-1',
+      nextBarId: 'bar-2',
+    },
+    {
+      id: 'cut-plan-2',
+      barId: 'bar-2',
+      nextBarId: null,
     },
   ],
   perceivedStretches: [

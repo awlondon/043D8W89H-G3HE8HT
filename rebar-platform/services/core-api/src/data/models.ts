@@ -138,3 +138,51 @@ export interface ScrapFreeStats {
   scrapFreeRuns: number;
   scrapFreeRatePercent: number;
 }
+
+export interface RebarInventory {
+  id: string;
+  barDiameter: string;
+  barLength: number;
+  quantityAvailable: number;
+  notes?: string;
+}
+
+export interface CutRequest {
+  id: string;
+  requestedLength: number;
+  diameter: string;
+  quantity: number;
+  status: string;
+  inventoryBarId: string;
+  inventoryCheck: boolean;
+  totalCutLength: number;
+}
+
+export interface Job {
+  id: string;
+  jobName: string;
+  priority: number;
+  status: string;
+  totalBars: number;
+  totalScrap: number;
+}
+
+export interface Bar {
+  id: string;
+  jobId: string;
+  diameter: string;
+  length: number;
+  bends: number;
+  bendAngles: number[];
+  stretchAllowance: number;
+  cutLength: number;
+  remainingLength: number;
+  scrapFlag: boolean;
+  operatorPrompt?: string;
+}
+
+export interface CutPlan {
+  id: string;
+  barId: string;
+  nextBarId?: string | null;
+}
