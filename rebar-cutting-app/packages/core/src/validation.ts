@@ -1,4 +1,4 @@
-import { MIN_PART_LENGTH_INCHES } from '@rebar/shared';
+import { MIN_PART_LENGTH_IN } from './optimizer/constraints';
 
 import type { Job, PartRequirement, Stock } from './models';
 
@@ -27,9 +27,9 @@ const validateStock = (stock: Stock) => {
 
 const validatePart = (part: PartRequirement) => {
   assertPositiveNumber(part.length, `Part ${part.id} length`);
-  if (part.length < MIN_PART_LENGTH_INCHES) {
+  if (part.length < MIN_PART_LENGTH_IN) {
     throw new Error(
-      `Part ${part.id} length must be at least ${MIN_PART_LENGTH_INCHES} inches.`,
+      `Part ${part.id} length must be at least ${MIN_PART_LENGTH_IN} inches.`,
     );
   }
   if (!Number.isInteger(part.quantity) || part.quantity <= 0) {

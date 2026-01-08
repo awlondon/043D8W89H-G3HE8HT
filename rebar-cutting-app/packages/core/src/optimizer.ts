@@ -1,4 +1,4 @@
-import { MIN_PART_LENGTH_INCHES } from '@rebar/shared';
+import { MIN_PART_LENGTH_IN } from './optimizer/constraints';
 
 import type { CutPlan, CutSegment, CutStickPlan, Job } from './models';
 import { expandParts, validateJob } from './validation';
@@ -17,7 +17,7 @@ const finalizeRemainder = (stick: StickState) => {
   }
 
   const label =
-    stick.remainingLength >= MIN_PART_LENGTH_INCHES
+    stick.remainingLength >= MIN_PART_LENGTH_IN
       ? 'KEEP_REMNANT'
       : 'WASTE';
 
@@ -84,7 +84,7 @@ export const generateCutPlan = (job: Job): CutPlan => {
     for (const segment of stick.segments) {
       if (
         (segment.label === 'PART' || segment.label === 'KEEP_REMNANT') &&
-        segment.length < MIN_PART_LENGTH_INCHES
+        segment.length < MIN_PART_LENGTH_IN
       ) {
         throw new Error(
           'Optimizer produced a segment shorter than the minimum length constraint.',
