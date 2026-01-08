@@ -1,0 +1,24 @@
+{
+  "name": "@rebar/tablet",
+  "version": "0.1.0",
+  "private": true,
+  "main": "App.tsx",
+  "scripts": {
+    "start": "expo start",
+    "lint": "eslint App.tsx src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rebar/core": "workspace:*",
+    "@rebar/shared": "workspace:*",
+    "expo": "~51.0.14",
+    "expo-sqlite": "~13.4.0",
+    "react": "18.2.0",
+    "react-native": "0.74.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.79",
+    "@types/react-native": "^0.73.0",
+    "typescript": "^5.7.2"
+  }
+}
