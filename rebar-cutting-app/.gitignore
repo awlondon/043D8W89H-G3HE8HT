@@ -1,0 +1,9 @@
+node_modules
+.DS_Store
+*.log
+.env
+.expo
+expo-env.d.ts
+coverage
+.dist
+build
