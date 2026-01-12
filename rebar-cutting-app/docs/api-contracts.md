@@ -44,3 +44,11 @@
   "status": "ok"
 }
 ```
+
+## QR Code Payload
+
+**Format**: `rebar://job/<jobId>`
+
+**Encoding**: UTF-8 string
+
+**Readable by**: iOS Camera, Android Camera, In-App Scanner
