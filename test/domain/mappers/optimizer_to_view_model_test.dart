@@ -14,7 +14,8 @@ optimizer.StockPlan _buildStockPlan({
   optimizer.RemainderClassification remainderClassification =
       optimizer.RemainderClassification.keepRemnant,
 }) {
-  final resolvedCuts = cuts ??
+  final resolvedCuts =
+      cuts ??
       const [
         optimizer.Cut(id: 'cut-1', label: 'Cut A', lengthUnits: 20),
         optimizer.Cut(id: 'cut-2', label: 'Cut B', lengthUnits: 20),
@@ -44,15 +45,22 @@ void main() {
       expect(viewModel.stickId, stockPlan.stickId);
       expect(viewModel.specKey, stockPlan.specKey);
       expect(viewModel.totalLengthUnits, stockPlan.totalLengthUnits);
-      expect(viewModel.remainingAfterCutUnits,
-          equals(stockPlan.remainingAfterCutUnits));
+      expect(
+        viewModel.remainingAfterCutUnits,
+        equals(stockPlan.remainingAfterCutUnits),
+      );
       expect(viewModel.finalRemainderUnits, stockPlan.finalRemainderUnits);
-      expect(viewModel.remainderClassification,
-          RemainderClassification.keepRemnant);
+      expect(
+        viewModel.remainderClassification,
+        RemainderClassification.keepRemnant,
+      );
       expect(viewModel.cuts, hasLength(stockPlan.cuts.length));
       expect(viewModel.cuts.first.id, stockPlan.cuts.first.id);
       expect(viewModel.cuts.first.label, stockPlan.cuts.first.label);
-      expect(viewModel.cuts.first.lengthUnits, stockPlan.cuts.first.lengthUnits);
+      expect(
+        viewModel.cuts.first.lengthUnits,
+        stockPlan.cuts.first.lengthUnits,
+      );
     });
 
     test('maps scrap waste classification', () {
@@ -78,9 +86,7 @@ void main() {
     });
 
     test('asserts when remainingAfterCutUnits length mismatches cuts', () {
-      final stockPlan = _buildStockPlan(
-        remainingAfterCutUnits: [80],
-      );
+      final stockPlan = _buildStockPlan(remainingAfterCutUnits: [80]);
 
       expect(
         () => mapStockPlanToViewModel(stockPlan),
@@ -89,9 +95,7 @@ void main() {
     });
 
     test('asserts when final remainder does not match last remaining', () {
-      final stockPlan = _buildStockPlan(
-        finalRemainderUnits: 10,
-      );
+      final stockPlan = _buildStockPlan(finalRemainderUnits: 10);
 
       expect(
         () => mapStockPlanToViewModel(stockPlan),

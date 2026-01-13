@@ -2,10 +2,7 @@
 // 1. Domain Models (ViewModel)
 // ---------------------------------------------------------------------------
 
-enum RemainderClassification {
-  keepRemnant,
-  scrapWaste,
-}
+enum RemainderClassification { keepRemnant, scrapWaste }
 
 class CutItemViewModel {
   final String id;
@@ -40,9 +37,12 @@ class StockPlanViewModel {
     required this.remainingAfterCutUnits,
     required this.finalRemainderUnits,
     required this.remainderClassification,
-  })  : assert(cuts.length == remainingAfterCutUnits.length,
-            'remainingAfterCutUnits must match cuts length'),
-        assert(
-            cuts.isEmpty || finalRemainderUnits == remainingAfterCutUnits.last,
-            'finalRemainderUnits must equal last remainingAfterCutUnits');
+  }) : assert(
+         cuts.length == remainingAfterCutUnits.length,
+         'remainingAfterCutUnits must match cuts length',
+       ),
+       assert(
+         cuts.isEmpty || finalRemainderUnits == remainingAfterCutUnits.last,
+         'finalRemainderUnits must equal last remainingAfterCutUnits',
+       );
 }

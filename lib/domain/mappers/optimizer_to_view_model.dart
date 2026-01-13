@@ -12,7 +12,10 @@ StockPlanViewModel mapStockPlanToViewModel(optimizer.StockPlan stockPlan) {
     'finalRemainderUnits must equal last remainingAfterCutUnits',
   );
   assert(stockPlan.totalLengthUnits >= 0, 'totalLengthUnits must be >= 0');
-  assert(stockPlan.finalRemainderUnits >= 0, 'finalRemainderUnits must be >= 0');
+  assert(
+    stockPlan.finalRemainderUnits >= 0,
+    'finalRemainderUnits must be >= 0',
+  );
   assert(
     stockPlan.remainingAfterCutUnits.every((value) => value >= 0),
     'remainingAfterCutUnits must not contain negative values',
@@ -40,8 +43,9 @@ StockPlanViewModel mapStockPlanToViewModel(optimizer.StockPlan stockPlan) {
       growable: false,
     ),
     finalRemainderUnits: stockPlan.finalRemainderUnits,
-    remainderClassification:
-        _mapRemainderClassification(stockPlan.remainderClassification),
+    remainderClassification: _mapRemainderClassification(
+      stockPlan.remainderClassification,
+    ),
   );
 }
 

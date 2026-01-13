@@ -1,18 +1,11 @@
-enum RemainderClassification {
-  keepRemnant,
-  scrapWaste,
-}
+enum RemainderClassification { keepRemnant, scrapWaste }
 
 class Cut {
   final String id;
   final String label;
   final int lengthUnits;
 
-  const Cut({
-    required this.id,
-    required this.label,
-    required this.lengthUnits,
-  });
+  const Cut({required this.id, required this.label, required this.lengthUnits});
 }
 
 class StockPlan {
