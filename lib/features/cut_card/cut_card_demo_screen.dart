@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:rebar_cutting_app/domain/repositories/job_repository.dart';
 
-import 'cut_card_demo.dart';
 import 'cut_card_screen.dart';
 
 class CutCardDemoScreen extends StatelessWidget {
@@ -8,6 +8,6 @@ class CutCardDemoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CutCardScreen(viewModel: mockViewModel);
+    return CutCardScreen(viewModel: demoStockPlanViewModel);
   }
 }
