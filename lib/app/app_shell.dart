@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../domain/repositories/job_repository.dart';
 import '../features/cut_card/cut_card_demo_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/scan/scan_screen.dart';
@@ -14,7 +13,6 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _selectedIndex = 0;
-  final JobRepository _jobRepository = FakeJobRepository();
 
   void _onDestinationSelected(int index) {
     setState(() => _selectedIndex = index);
@@ -53,7 +51,7 @@ class _AppShellState extends State<AppShell> {
               index: _selectedIndex,
               children: [
                 const HomeScreen(),
-                ScanScreen(jobRepository: _jobRepository),
+                const ScanScreen(),
                 const CutCardDemoScreen(),
               ],
             ),
