@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-
-import 'app/rebar_app.dart';
-import 'features/cut_card/cut_card_demo.dart';
+import 'package:rebar_cutting_app/app/rebar_app.dart';
 
 void main() {
-  runApp(RebarCutApp(viewModel: mockViewModel));
+  runApp(const RebarApp());
 }
