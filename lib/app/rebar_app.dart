@@ -25,6 +25,11 @@ class _RebarAppState extends State<RebarApp> {
       theme: ThemeData.light().copyWith(
         scaffoldBackgroundColor: const Color(0xFFF5F7FB),
       ),
+      routes: {
+        '/home': (context) => const HomeScreen(),
+        '/scan': (context) => const ScanScreen(),
+        '/cut-card-demo': (context) => const CutCardDemoScreen(),
+      },
       home: _AppShell(
         selectedIndex: _selectedIndex,
         onSelectedIndex: _onNavSelected,
