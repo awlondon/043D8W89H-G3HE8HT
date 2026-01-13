@@ -29,7 +29,7 @@ class StockPlanViewModel {
   final int finalRemainderUnits;
   final RemainderClassification remainderClassification;
 
-  const StockPlanViewModel({
+  StockPlanViewModel({
     required this.stickId,
     required this.specKey,
     required this.totalLengthUnits,
@@ -37,12 +37,15 @@ class StockPlanViewModel {
     required this.remainingAfterCutUnits,
     required this.finalRemainderUnits,
     required this.remainderClassification,
-  }) : assert(
-         cuts.length == remainingAfterCutUnits.length,
-         'remainingAfterCutUnits must match cuts length',
-       ),
-       assert(
-         cuts.isEmpty || finalRemainderUnits == remainingAfterCutUnits.last,
-         'finalRemainderUnits must equal last remainingAfterCutUnits',
-       );
+  }) {
+    assert(cuts.isNotEmpty, 'cuts cannot be empty');
+    assert(
+      cuts.length == remainingAfterCutUnits.length,
+      'remainingAfterCutUnits must match cuts length',
+    );
+    assert(
+      finalRemainderUnits == remainingAfterCutUnits.last,
+      'finalRemainderUnits must equal last remainingAfterCutUnits',
+    );
+  }
 }

@@ -1,8 +1,9 @@
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/domain/mappers/optimizer_to_view_model.dart';
-import '../../../lib/domain/models/optimizer/stock_plan.dart' as optimizer;
-import '../../../lib/domain/view_models/stock_plan_view_model.dart';
+import 'package:rebar_cutting_app/domain/mappers/optimizer_to_view_model.dart';
+import 'package:rebar_cutting_app/domain/models/optimizer/stock_plan.dart'
+    as optimizer;
+import 'package:rebar_cutting_app/domain/view_models/stock_plan_view_model.dart';
 
 optimizer.StockPlan _buildStockPlan({
   String stickId = 'stick-1',
