@@ -1,7 +1,7 @@
 import '../../domain/view_models/stock_plan_view_model.dart';
 
 // TODO: Replace with optimizer output.
-const mockViewModel = StockPlanViewModel(
+final mockViewModel = StockPlanViewModel(
   stickId: "STK-2024-X99",
   specKey: "#5 GRADE 60",
   totalLengthUnits: 240000,
