@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rebar_cutting_app/features/cut_card/cut_card_demo.dart';
 import 'package:rebar_cutting_app/features/home/home_screen.dart';
 import 'package:rebar_cutting_app/features/scan/scan_screen.dart';
+import 'package:rebar_cutting_app/features/scan_ar/screens/ar_scan_screen.dart';
 
 class RebarApp extends StatefulWidget {
   const RebarApp({super.key});
@@ -29,6 +30,7 @@ class _RebarAppState extends State<RebarApp> {
         '/home': (context) => const HomeScreen(),
         '/scan': (context) => const ScanScreen(),
         '/cut-card-demo': (context) => const CutCardDemoScreen(),
+        '/ar-scan': (context) => const ARScanScreen(),
       },
       home: _AppShell(
         selectedIndex: _selectedIndex,
@@ -52,6 +54,7 @@ class _AppShell extends StatelessWidget {
     final screens = <Widget>[
       const HomeScreen(),
       const ScanScreen(),
+      const ARScanScreen(),
       const CutCardDemoScreen(),
     ];
 
@@ -72,6 +75,11 @@ class _AppShell extends StatelessWidget {
                 icon: Icon(Icons.qr_code_scanner_outlined),
                 selectedIcon: Icon(Icons.qr_code_scanner),
                 label: Text('Scan'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.center_focus_strong_outlined),
+                selectedIcon: Icon(Icons.center_focus_strong),
+                label: Text('AR Scan'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.content_cut_outlined),
