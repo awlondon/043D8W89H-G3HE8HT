@@ -18,14 +18,20 @@ class RebarDetection {
   });
 
   factory RebarDetection.fromJson(Map<String, dynamic> json) {
+    final bbox = json['bbox'] as Map<String, dynamic>?;
+    final xValue = bbox?['x'] ?? json['x'];
+    final yValue = bbox?['y'] ?? json['y'];
+    final wValue = bbox?['w'] ?? json['w'];
+    final hValue = bbox?['h'] ?? json['h'];
+
     return RebarDetection(
       id: json['id'] as String,
       specKey: json['specKey'] as String,
       confidence: (json['confidence'] as num).toDouble(),
-      x: (json['x'] as num).toDouble(),
-      y: (json['y'] as num).toDouble(),
-      w: (json['w'] as num).toDouble(),
-      h: (json['h'] as num).toDouble(),
+      x: (xValue as num).toDouble(),
+      y: (yValue as num).toDouble(),
+      w: (wValue as num).toDouble(),
+      h: (hValue as num).toDouble(),
     );
   }
 }
